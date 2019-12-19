@@ -13,21 +13,21 @@
 
 package goalisa
 
-import (
-	"database/sql"
-	"database/sql/driver"
-)
-
-// register driver
-func init() {
-	sql.Register("alisa", &Driver{})
+// Config is the deserialization of connect string
+type Config struct {
+	AccessID  string
+	AccessKey string
+	Endpoint  string
 }
 
-// Driver implements database/sql/driver.Driver
-type Driver struct{}
-
-// Open returns a connection
-func (dr Driver) Open(dsn string) (driver.Conn, error) {
+// ParseDSN deserialize the connect string
+func ParseDSN(dsn string) (*Config, error) {
 	// TODO(weiguoz)
-	return nil, nil
+	return &Config{}, nil
+}
+
+// FormatDSN serialize a config to connect string
+func (cfg *Config) FormatDSN() string {
+	// TODO(weiguoz)
+	return ""
 }
