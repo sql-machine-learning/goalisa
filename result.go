@@ -13,15 +13,15 @@
 
 package goalisa
 
-import (
-	"testing"
+type alisaResult struct {
+	affectedRows int64
+	insertID     int64
+}
 
-	"github.com/stretchr/testify/assert"
-)
+func (ar *alisaResult) LastInsertId() (int64, error) {
+	return ar.insertID, nil
+}
 
-func TestOpen(t *testing.T) {
-	a := assert.New(t)
-	var dr Driver
-	_, err := dr.Open("alisa://u:p@endpoint?a=1")
-	a.NoError(err)
+func (ar *alisaResult) RowsAffected() (int64, error) {
+	return ar.affectedRows, nil
 }
