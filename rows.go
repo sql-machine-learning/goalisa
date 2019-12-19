@@ -14,14 +14,38 @@
 package goalisa
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	"database/sql/driver"
+	"reflect"
 )
 
-func TestOpen(t *testing.T) {
-	a := assert.New(t)
-	var dr Driver
-	_, err := dr.Open("alisa://u:p@endpoint?a=1")
-	a.NoError(err)
+var builtinString = reflect.TypeOf(string(""))
+
+type alisaRows struct {
+	// TODO(weiguoz)
+}
+
+func (ar *alisaRows) Close() error {
+	// TODO(weiguoz)
+	return nil
+}
+
+func (ar *alisaRows) Columns() []string {
+	// TODO(weiguoz)
+	return nil
+}
+
+// Notice: `\N` denotes nil, even outher types
+func (ar *alisaRows) Next(dst []driver.Value) error {
+	// TODO(weiguoz)
+	return nil
+}
+
+func (ar *alisaRows) ColumnTypeScanType(i int) reflect.Type {
+	// TODO(weiguoz)
+	return builtinString
+}
+
+func (ar *alisaRows) ColumnTypeDatabaseTypeName(i int) string {
+	// TODO(weiguoz)
+	return ""
 }
