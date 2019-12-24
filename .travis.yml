@@ -5,6 +5,7 @@ go:
 before_install:
 - sudo apt-get update
 - sudo apt-get install python3
+- sudo apt-get install python3-venv
 
 install:
   # Note(tony): TravisCI's native `go get ${gobuild_args} ./...` failed with
