@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-// ref: https://help.aliyun.com/document_detail/25492.html
+// Follow https://help.aliyun.com/document_detail/25492.html
 func signature(params map[string]string, httpMethod, secret string) string {
 	keys := make([]string, 0, len(params))
 	for k := range params {
@@ -40,7 +40,6 @@ func signature(params map[string]string, httpMethod, secret string) string {
 	return base64.StdEncoding.EncodeToString(hm.Sum(nil))
 }
 
-// Follow https://help.aliyun.com/document_detail/25492.html
 func percentEncode(s string) string {
 	es := url.QueryEscape(s)
 	es = strings.Replace(es, "+", "%20", -1)
