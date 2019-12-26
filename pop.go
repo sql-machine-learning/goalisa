@@ -16,13 +16,15 @@ package goalisa
 import (
 	"crypto/hmac"
 	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"sort"
 	"strings"
 )
 
-func signature(params map[string]string, httpMethod, key string) string {
+// ref: https://help.aliyun.com/document_detail/25492.html
+func signature(params map[string]string, httpMethod, secret string) string {
 	keys := make([]string, 0, len(params))
 	for k := range params {
 		keys = append(keys, k)
@@ -33,8 +35,9 @@ func signature(params map[string]string, httpMethod, key string) string {
 		qry += fmt.Sprintf("&%s=%s", percentEncode(k), percentEncode(params[k]))
 	}
 	signSrc := percentEncode(httpMethod) + "&" + percentEncode("/") + "&" + percentEncode((qry[1:]))
-	hm := hmac.New(sha1.New, []byte(key))
-	return string(hm.Sum([]byte(signSrc)))
+	hm := hmac.New(sha1.New, []byte(secret+"&"))
+	hm.Write([]byte(signSrc))
+	return base64.StdEncoding.EncodeToString(hm.Sum(nil))
 }
 
 // Follow https://help.aliyun.com/document_detail/25492.html
