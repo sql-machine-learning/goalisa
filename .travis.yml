@@ -1,3 +1,24 @@
 language: go
 go:
   - 1.13.x
+
+before_install:
+- sudo apt-get update
+- sudo apt-get install python3
+- sudo apt-get install python3-venv
+
+install:
+  # Note(tony): TravisCI's native `go get ${gobuild_args} ./...` failed with
+  # `/usr/bin/ld: final link failed: Bad value`, the cause is the system linker
+  # being not up to date: https://github.com/golang/go/issues/15038
+  # So I decided to skip install, and go get inside sqlflow:latest image
+  # Ref build: https://travis-ci.com/sql-machine-learning/sqlflow/builds/107870583
+  - echo "skip install"
+
+script:
+  - set -e
+  - go get -u golang.org/x/lint/golint
+  - python3 -m venv venv && source venv/bin/activate && pip install pre-commit && pre-commit run -a
+  - go build ./...
+  - echo "skip go test since alisa server is not available in public network"
+
