@@ -18,13 +18,61 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	//	"github.com/google/uuid"
 )
 
+const (
+	httpTimeoutSec = 10
+)
+
+type popClient struct {
+}
+
+func (pop *popClient) request(params map[string]string, url, accessSecret string) (string, error) {
+	sign := pop.signature(params, "POST", accessSecret)
+	params["Signature"] = sign
+
+	cli := &http.Client{
+		Timeout: time.Second * httpTimeoutSec,
+	}
+	rsp, err := cli.PostForm(url, convertMap2URLValues(params))
+	if err != nil {
+		return "", err
+	}
+	defer rsp.Body.Close()
+
+	fmt.Println("response status:", rsp.Status)
+	fmt.Println("response header:", rsp.Header)
+	body, _ := ioutil.ReadAll(rsp.Body)
+	fmt.Println("response body:", string(body))
+	return string(body), nil
+}
+
+func (pop *popClient) baseParams(accessID string) map[string]string {
+	gmt, _ := time.LoadLocation("GMT")
+	uu, _ := uuid.NewUUID()
+	return map[string]string{
+		"Timestamp":        time.Now().In(gmt).Format(time.RFC3339),
+		"AccessKeyId":      accessID,
+		"SignatureMethod":  "HMAC-SHA1",
+		"SignatureVersion": "1.0",
+		"SignatureNonce":   strings.Replace(uu.String(), "-", "", -1),
+		"Format":           "JSON",
+		"Product":          "dataworks",
+		"Version":          "2017-12-12",
+	}
+}
+
 // Follow https://help.aliyun.com/document_detail/25492.html
-func signature(params map[string]string, httpMethod, secret string) string {
+func (pop *popClient) signature(params map[string]string, httpMethod, secret string) string {
 	keys := make([]string, 0, len(params))
 	for k := range params {
 		keys = append(keys, k)
@@ -45,4 +93,12 @@ func percentEncode(s string) string {
 	es = strings.Replace(es, "+", "%20", -1)
 	es = strings.Replace(es, "*", "%2A", -1)
 	return strings.Replace(es, "%7E", "~", -1)
+}
+
+func convertMap2URLValues(src map[string]string) url.Values {
+	uv := make(url.Values)
+	for k, v := range src {
+		uv.Add(k, v)
+	}
+	return uv
 }
