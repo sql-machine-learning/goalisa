@@ -19,6 +19,9 @@ vendor/
 *.vim
 *.swp
 
+# JetBrains IDE
+.idea
+
 # project
 /logs
 /Gopkg.lock

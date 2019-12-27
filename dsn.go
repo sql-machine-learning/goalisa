@@ -13,21 +13,55 @@
 
 package goalisa
 
-// Config is the deserialization of connect string
+import (
+	"fmt"
+	"net/url"
+	"regexp"
+)
+
+var (
+	reDSN = regexp.MustCompile(`^([a-zA-Z0-9_-]+):([=a-zA-Z0-9_-]+)@([:a-zA-Z0-9/_.-]+)\?([^/]+)$`)
+)
+
+// Config is the deserialization of connect string, the connection string should of format:
+// pop_access_id:pop_access_key@pop_url?env=..
 type Config struct {
-	AccessID  string
-	AccessKey string
-	Endpoint  string
+	// POP config
+	POPAccessID  string
+	POPAccessKey string
+	POPURL       string
+	// Environment variable JSON encoded in base64 format.
+	// This variable should be passed through to the http request
+	Env string
 }
 
 // ParseDSN deserialize the connect string
 func ParseDSN(dsn string) (*Config, error) {
-	// TODO(weiguoz)
-	return &Config{}, nil
+	sub := reDSN.FindStringSubmatch(dsn)
+	if len(sub) != 5 {
+		return nil, fmt.Errorf(`dsn %s doesn't match pop_access_id:pop_access_key@pop_url?params`, dsn)
+	}
+	pid, pkey, purl := sub[1], sub[2], sub[3]
+
+	kvs, err := url.ParseQuery(sub[4])
+	if err != nil {
+		return nil, err
+	}
+
+	requiredParameter := []string{"env"}
+	for _, k := range requiredParameter {
+		v := kvs.Get(k)
+		if v == "" {
+			return nil, fmt.Errorf(`dsn is missing required parameter %s`, k)
+		}
+	}
+
+	return &Config{
+		POPAccessID: pid, POPAccessKey: pkey, POPURL: purl,
+		Env: kvs.Get("env")}, nil
 }
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	// TODO(weiguoz)
-	return ""
+	return fmt.Sprintf(`%s:%s@%s?env=%s`, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL, cfg.Env)
 }
