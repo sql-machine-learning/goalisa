@@ -24,8 +24,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 	//	"github.com/google/uuid"
 )
 
@@ -54,21 +52,6 @@ func (pop *popClient) request(params map[string]string, url, accessSecret string
 	body, _ := ioutil.ReadAll(rsp.Body)
 	fmt.Println("response body:", string(body))
 	return string(body), nil
-}
-
-func (pop *popClient) baseParams(accessID string) map[string]string {
-	gmt, _ := time.LoadLocation("GMT")
-	uu, _ := uuid.NewUUID()
-	return map[string]string{
-		"Timestamp":        time.Now().In(gmt).Format(time.RFC3339),
-		"AccessKeyId":      accessID,
-		"SignatureMethod":  "HMAC-SHA1",
-		"SignatureVersion": "1.0",
-		"SignatureNonce":   strings.Replace(uu.String(), "-", "", -1),
-		"Format":           "JSON",
-		"Product":          "dataworks",
-		"Version":          "2017-12-12",
-	}
 }
 
 // Follow https://help.aliyun.com/document_detail/25492.html
