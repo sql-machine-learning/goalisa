@@ -3,3 +3,10 @@
   hooks:
     - id: go-fmt
     - id: go-lint
+- repo: local
+  hooks:
+    - id: copyright_checker
+      name: copyright_checker
+      entry: python ./scripts/copyright.py
+      language: system
+      files: \.(go|py|sh)$
