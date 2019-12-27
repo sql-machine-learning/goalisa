@@ -20,27 +20,23 @@ import (
 
 func TestParseDSN(t *testing.T) {
 	a := assert.New(t)
-	dsn := `pid:pkey@example.com?alisa_access_id=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`
+	dsn := `pid:pkey@example.com?env=sadfjkiem`
 	cfg, err := ParseDSN(dsn)
 	a.NoError(err)
 	expected := Config{
-		POPAccessID:    "pid",
-		POPAccessKey:   "pkey",
-		POPURL:         "example.com",
-		AlisaAccessID:  "aid",
-		AlisaAccessKey: "akey",
-		AlisaProject:   "aproj",
-		Env:            "sadfjkiem"}
+		POPAccessID:  "pid",
+		POPAccessKey: "pkey",
+		POPURL:       "example.com",
+		Env:          "sadfjkiem"}
 	a.Equal(expected, *cfg)
 }
 
 func TestParseDSNError(t *testing.T) {
 	a := assert.New(t)
 	badDSN := []string{
-		`:pkey@example.com?alisa_access_id=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`,
-		`pid:@example.com?alisa_access_id=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`,
-		`pid:pkey@?alisa_access_id=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`,
-		`pid:pkey@example.com?alisa_acceid=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`,
+		`:pkey@example.com?env=sadfjkiem`,
+		`pid:@example.com?env=sadfjkiem`,
+		`pid:pkey@?env=sadfjkiem`,
 	}
 	for _, dsn := range badDSN {
 		_, err := ParseDSN(dsn)
@@ -51,20 +47,17 @@ func TestParseDSNError(t *testing.T) {
 func TestConfig_FormatDSN(t *testing.T) {
 	a := assert.New(t)
 	cfg := Config{
-		POPAccessID:    "pid",
-		POPAccessKey:   "pkey",
-		POPURL:         "example.com",
-		AlisaAccessID:  "aid",
-		AlisaAccessKey: "akey",
-		AlisaProject:   "aproj",
-		Env:            "sadfjkiem"}
-	expected := `pid:pkey@example.com?alisa_access_id=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`
+		POPAccessID:  "pid",
+		POPAccessKey: "pkey",
+		POPURL:       "example.com",
+		Env:          "sadfjkiem"}
+	expected := `pid:pkey@example.com?env=sadfjkiem`
 	a.Equal(expected, cfg.FormatDSN())
 }
 
 func TestRoundTrip(t *testing.T) {
 	a := assert.New(t)
-	expected := `pid:pkey@example.com?alisa_access_id=aid&alisa_access_key=akey&alisa_project=aproj&env=sadfjkiem`
+	expected := `pid:pkey@example.com?env=sadfjkiem`
 	cfg, err := ParseDSN(expected)
 	a.NoError(err)
 	a.Equal(expected, cfg.FormatDSN())

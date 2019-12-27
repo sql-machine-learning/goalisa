@@ -24,16 +24,12 @@ var (
 )
 
 // Config is the deserialization of connect string, the connection string should of format:
-// pop_access_id:pop_access_key@pop_url?alisa_access_id=..&alisa_access_key=..&alisa_project=..&env=..
+// pop_access_id:pop_access_key@pop_url?env=..
 type Config struct {
 	// POP config
 	POPAccessID  string
 	POPAccessKey string
 	POPURL       string
-	// Alisa config
-	AlisaAccessID  string
-	AlisaAccessKey string
-	AlisaProject   string
 	// Environment variable JSON encoded in base64 format.
 	// This variable should be passed through to the http request
 	Env string
@@ -52,7 +48,7 @@ func ParseDSN(dsn string) (*Config, error) {
 		return nil, err
 	}
 
-	requiredParameter := []string{"alisa_access_id", "alisa_access_key", "alisa_project", "env"}
+	requiredParameter := []string{"env"}
 	for _, k := range requiredParameter {
 		v := kvs.Get(k)
 		if v == "" {
@@ -62,15 +58,10 @@ func ParseDSN(dsn string) (*Config, error) {
 
 	return &Config{
 		POPAccessID: pid, POPAccessKey: pkey, POPURL: purl,
-		AlisaAccessID:  kvs.Get("alisa_access_id"),
-		AlisaAccessKey: kvs.Get("alisa_access_key"),
-		AlisaProject:   kvs.Get("alisa_project"),
-		Env:            kvs.Get("env")}, nil
+		Env: kvs.Get("env")}, nil
 }
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	s := `%s:%s@%s?alisa_access_id=%s&alisa_access_key=%s&alisa_project=%s&env=%s`
-	return fmt.Sprintf(s, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL,
-		cfg.AlisaAccessID, cfg.AlisaAccessKey, cfg.AlisaProject, cfg.Env)
+	return fmt.Sprintf(`%s:%s@%s?env=%s`, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL, cfg.Env)
 }
