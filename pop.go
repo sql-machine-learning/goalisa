@@ -18,13 +18,47 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
+	//	"github.com/google/uuid"
 )
 
+// reuse http client
+type popClient struct {
+	*http.Client
+}
+
+func newPOP(timeout time.Duration) *popClient {
+	if timeout < 0 {
+		timeout = 10 * time.Second
+	}
+	return &popClient{
+		&http.Client{
+			Timeout: timeout,
+		},
+	}
+}
+
+func (pop *popClient) request(params map[string]string, url, accessSecret string) (string, error) {
+	sign := pop.signature(params, "POST", accessSecret)
+	params["Signature"] = sign
+
+	rsp, err := pop.PostForm(url, convertMap2URLValues(params))
+	if err != nil {
+		return "", err
+	}
+	defer rsp.Body.Close()
+
+	body, _ := ioutil.ReadAll(rsp.Body)
+	return string(body), nil
+}
+
 // Follow https://help.aliyun.com/document_detail/25492.html
-func signature(params map[string]string, httpMethod, secret string) string {
+func (pop *popClient) signature(params map[string]string, httpMethod, secret string) string {
 	keys := make([]string, 0, len(params))
 	for k := range params {
 		keys = append(keys, k)
@@ -45,4 +79,12 @@ func percentEncode(s string) string {
 	es = strings.Replace(es, "+", "%20", -1)
 	es = strings.Replace(es, "*", "%2A", -1)
 	return strings.Replace(es, "%7E", "~", -1)
+}
+
+func convertMap2URLValues(src map[string]string) url.Values {
+	uv := make(url.Values)
+	for k, v := range src {
+		uv.Add(k, v)
+	}
+	return uv
 }

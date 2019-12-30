@@ -27,7 +27,8 @@ func TestSignature(t *testing.T) {
 		"age":      "3",
 		"homepage": "http://little4.kg?true",
 	}
-	sign := signature(params, "POST", "test_secret_key")
+	pop := popClient{}
+	sign := pop.signature(params, "POST", "test_secret_key")
 	a.Equal("6kvgvUDEHtFdZKj8+HhtAS1ovHY=", sign)
 }
 
