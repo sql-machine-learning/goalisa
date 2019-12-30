@@ -32,6 +32,7 @@ type alisa struct {
 	pop       *popClient
 }
 
+// newAlisa init an Alisa client
 func newAlisa(popURL, popID, popSecret, verbose, b64env string) (*alisa, error) {
 	buf, err := base64.URLEncoding.DecodeString(b64env)
 	if err != nil {
@@ -51,9 +52,9 @@ func newAlisa(popURL, popID, popSecret, verbose, b64env string) (*alisa, error) 
 	}, nil
 }
 
-// return task id
+// createTask returns a task id
 func (ali *alisa) createTask(code string) (string, error) {
-	params := ali.baseParams()
+	params := baseParams(ali.popID)
 	params["Action"] = "CreateAlisaTask"
 	params["ExecCode"] = code
 
@@ -73,12 +74,39 @@ func (ali *alisa) createTask(code string) (string, error) {
 	return rsp, nil
 }
 
-func (ali *alisa) baseParams() map[string]string {
+// getStatus: returns the task status of taskID
+func (ali *alisa) getStatus(taskID string) int {
+	return 0
+}
+
+// completed: check if the status is completed
+func (ali *alisa) completed(status int) bool {
+	return true
+}
+
+// readLogs: reads task logs from `offset`
+// return -1: read to the end
+// return n(>0): keep reading with the offset `n` in the next time
+func (ali *alisa) readLogs(taskID string, offset int) int {
+	return 0
+}
+
+// readResults: reads the task results
+func (ali *alisa) readResults(taskID string) {
+	// TODO(weiguoz): define a result
+}
+
+// stop: stops the task
+func (ali *alisa) stop(taskID string) bool {
+	return true
+}
+
+func baseParams(popID string) map[string]string {
 	gmt, _ := time.LoadLocation("GMT")
 	uu, _ := uuid.NewUUID()
 	return map[string]string{
 		"Timestamp":        time.Now().In(gmt).Format(time.RFC3339),
-		"AccessKeyId":      ali.popID,
+		"AccessKeyId":      popID,
 		"SignatureMethod":  "HMAC-SHA1",
 		"SignatureVersion": "1.0",
 		"SignatureNonce":   strings.Replace(uu.String(), "-", "", -1),
