@@ -53,7 +53,10 @@ func (pop *popClient) request(params map[string]string, url, accessSecret string
 	}
 	defer rsp.Body.Close()
 
-	body, _ := ioutil.ReadAll(rsp.Body)
+	body, err := ioutil.ReadAll(rsp.Body)
+	if err != nil {
+		return "", err
+	}
 	return string(body), nil
 }
 
