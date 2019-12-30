@@ -29,7 +29,7 @@ type alisa struct {
 	popSecret string
 	verbose   string
 	envs      map[string]string
-	*popClient
+	pop       *popClient
 }
 
 func newAlisa(popURL, popID, popSecret, verbose, b64env string) (*alisa, error) {
@@ -65,7 +65,7 @@ func (ali *alisa) createTask(code string) (string, error) {
 	params["ExecTarget"] = ali.envs["ALISA_TASK_EXEC_TARGET"]
 	envBuf, _ := json.Marshal(ali.envs)
 	params["Envs"] = string(envBuf)
-	rsp, err := ali.request(params, ali.popURL, ali.popSecret)
+	rsp, err := ali.pop.request(params, ali.popURL, ali.popSecret)
 	if err != nil {
 		return "", err
 	}

@@ -47,10 +47,7 @@ func (pop *popClient) request(params map[string]string, url, accessSecret string
 	}
 	defer rsp.Body.Close()
 
-	fmt.Println("response status:", rsp.Status)
-	fmt.Println("response header:", rsp.Header)
 	body, _ := ioutil.ReadAll(rsp.Body)
-	fmt.Println("response body:", string(body))
 	return string(body), nil
 }
 
