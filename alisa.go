@@ -56,6 +56,7 @@ func (ali *alisa) createTask(code string) (string, error) {
 	params := ali.baseParams()
 	params["Action"] = "CreateAlisaTask"
 	params["ExecCode"] = code
+
 	params["SHOW_COLUMN_TYPE"] = "true" // display column type, for feature derivation.
 	params["CustomerId"] = "sqlFlow"
 	params["PluginName"] = "odps_sql"
@@ -68,6 +69,7 @@ func (ali *alisa) createTask(code string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// TODO(weiguo): return rsp["retValue"]["taskId"] in fact.
 	return rsp, nil
 }
 
