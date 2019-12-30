@@ -27,21 +27,27 @@ import (
 	//	"github.com/google/uuid"
 )
 
-const (
-	httpTimeoutSec = 10
-)
-
+// reuse http client
 type popClient struct {
+	*http.Client
+}
+
+func newPOP(timeout time.Duration) *popClient {
+	if timeout < 0 {
+		timeout = 10 * time.Second
+	}
+	return &popClient{
+		&http.Client{
+			Timeout: timeout,
+		},
+	}
 }
 
 func (pop *popClient) request(params map[string]string, url, accessSecret string) (string, error) {
 	sign := pop.signature(params, "POST", accessSecret)
 	params["Signature"] = sign
 
-	cli := &http.Client{
-		Timeout: time.Second * httpTimeoutSec,
-	}
-	rsp, err := cli.PostForm(url, convertMap2URLValues(params))
+	rsp, err := pop.PostForm(url, convertMap2URLValues(params))
 	if err != nil {
 		return "", err
 	}

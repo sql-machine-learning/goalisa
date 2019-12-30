@@ -47,7 +47,7 @@ func newAlisa(popURL, popID, popSecret, verbose, b64env string) (*alisa, error) 
 		popSecret,
 		verbose,
 		envs,
-		&popClient{},
+		newPOP(-1),
 	}, nil
 }
 
