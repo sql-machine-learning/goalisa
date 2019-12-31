@@ -208,7 +208,7 @@ func (ali *alisa) requetAndParseResponse(params map[string]string) (*json.RawMes
 		return nil, err
 	}
 	if aliRsp.Code != "0" {
-		return nil, fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
+		return nil, fmt.Errorf("bad result, requestId=%s, code=%s, message=%s", aliRsp.RequestID, aliRsp.Code, aliRsp.Message)
 	}
 	return aliRsp.Value, nil
 }
@@ -230,7 +230,7 @@ func parseAlisaTaskResult(from *json.RawMessage, to *alisaTaskResult) error {
 			if len(nt) != 2 {
 				return fmt.Errorf("bad header of alisa task result")
 			}
-			to.columns = append(to.columns, alisaTaskResultColumn{nt[0], nt[1]})
+			to.columns = append(to.columns, alisaTaskResultColumn{name: nt[0], typ: nt[1]})
 		}
 	}
 
