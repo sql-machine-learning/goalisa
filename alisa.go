@@ -66,12 +66,12 @@ func (ali *alisa) createTask(code string) (string, error) {
 	params["ExecTarget"] = ali.envs["ALISA_TASK_EXEC_TARGET"]
 	envBuf, _ := json.Marshal(ali.envs)
 	params["Envs"] = string(envBuf)
-	rsp, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+	rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
 	if err != nil {
 		return "", err
 	}
-	// TODO(weiguo): return rsp["retValue"]["taskId"] in fact.
-	return rsp, nil
+	// TODO(weiguo): return rspBuf["retValue"]["taskId"] in fact.
+	return string(rspBuf), nil
 }
 
 // getStatus: returns the task status of taskID
@@ -99,6 +99,10 @@ func (ali *alisa) readResults(taskID string) {
 // stop: stops the task
 func (ali *alisa) stop(taskID string) bool {
 	return true
+}
+
+func (ali *alisa) requetAndParseResult(params map[string]string) {
+	return
 }
 
 func baseParams(popID string) map[string]string {
