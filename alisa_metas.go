@@ -15,6 +15,16 @@ package goalisa
 
 import "encoding/json"
 
+type alisaTaskResultColumn struct {
+	name string
+	typ  string
+}
+
+type alisaTaskResult struct {
+	columns []alisaTaskResultColumn
+	body    [][]string
+}
+
 type alisaResponse struct {
 	RequestID     string           `json:"requestId"`
 	Code          string           `json:"returnCode"`
@@ -24,7 +34,7 @@ type alisaResponse struct {
 }
 
 // alisaResponse.Value
-type taskMeta struct {
+type alisaTaskMeta struct {
 	TaskID       string `json:"alisaTaskId"`
 	CreateTime   int64  `json:"createTime"`
 	Status       int    `json:"status"`
@@ -33,7 +43,7 @@ type taskMeta struct {
 }
 
 // alisaResponse.Value
-type taskStatus struct {
+type alisaTaskStatus struct {
 	TaskID      string `json:"alisaTaskId"`
 	Status      int    `json:"status"`
 	NodeName    string `json:"nodeName"`
@@ -43,7 +53,7 @@ type taskStatus struct {
 }
 
 // alisaResponse.Value
-type taskLog struct {
+type alisaTaskLog struct {
 	ReadLen string `json:"readLength"`
 	Content string `json:"logMsg"`
 	End     bool   `json:"isEnd"`
@@ -53,7 +63,7 @@ type taskLog struct {
 // taskResultCount: single string
 
 // alisaResponse.Value
-type taskRawResult struct {
+type alisaTaskRawResult struct {
 	Header string `json:"dataHeader"`
 	Body   string `json:"resultMsg"`
 }

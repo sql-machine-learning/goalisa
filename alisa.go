@@ -24,6 +24,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const maxLogNum = 1000
+
 type alisa struct {
 	popURL    string
 	popID     string
@@ -67,19 +69,13 @@ func (ali *alisa) createTask(code string) (string, error) {
 	params["ExecTarget"] = ali.envs["ALISA_TASK_EXEC_TARGET"]
 	envBuf, _ := json.Marshal(ali.envs)
 	params["Envs"] = string(envBuf)
-	rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+
+	res, err := ali.requetAndParseResponse(params)
 	if err != nil {
 		return "", err
 	}
-	var aliRsp alisaResponse
-	if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
-		return "", err
-	}
-	if aliRsp.Code != "0" {
-		return "", fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
-	}
-	var val taskMeta
-	if err = json.Unmarshal(*aliRsp.Value, &val); err != nil {
+	var val alisaTaskMeta
+	if err = json.Unmarshal(*res, &val); err != nil {
 		return "", err
 	}
 	return val.TaskID, nil
@@ -91,19 +87,12 @@ func (ali *alisa) getStatus(taskID string) (int, error) {
 	params["Action"] = "GetAlisaTask"
 	params["AlisaTaskId"] = taskID
 
-	rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+	res, err := ali.requetAndParseResponse(params)
 	if err != nil {
 		return -1, err
 	}
-	var aliRsp alisaResponse
-	if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
-		return -1, err
-	}
-	if aliRsp.Code != "0" {
-		return -1, fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
-	}
-	var val taskStatus
-	if err = json.Unmarshal(*aliRsp.Value, &val); err != nil {
+	var val alisaTaskStatus
+	if err = json.Unmarshal(*res, &val); err != nil {
 		return -1, err
 	}
 	return val.Status, nil
@@ -118,38 +107,32 @@ func (ali *alisa) completed(status int) bool {
 // return -1: read to the end
 // return n(>0): keep reading with the offset `n` in the next time
 func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
-	// we don't trust the server returned `end`, so the `maxLogs` used to deal with too many logs.
+	// the `maxLogs` used to deal with too many logs.
 	end := false
-	for maxLogs := 10000; !end && maxLogs > 0; maxLogs-- {
+	for i := 0; i < maxLogNum && !end; i++ {
 		params := baseParams(ali.popID)
 		params["Action"] = "GetAlisaTaskLog"
 		params["AlisaTaskId"] = taskID
 		params["Offset"] = fmt.Sprintf("%d", offset)
-		rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+
+		res, err := ali.requetAndParseResponse(params)
 		if err != nil {
-			return 0, err
+			return offset, err
 		}
-		var aliRsp alisaResponse
-		if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
-			return 0, err
+		var log alisaTaskLog
+		if err = json.Unmarshal(*res, &log); err != nil {
+			return offset, err
 		}
-		if aliRsp.Code != "0" {
-			return 0, fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
-		}
-		var val taskLog
-		if err = json.Unmarshal(*aliRsp.Value, &val); err != nil {
-			return 0, err
-		}
-		rdLen, err := strconv.Atoi(val.ReadLen)
+		rdLen, err := strconv.Atoi(log.ReadLen)
 		if err != nil {
-			return 0, nil
+			return offset, err
 		}
 		if rdLen == 0 {
 			return offset, nil
 		}
 		offset += rdLen
-		end = val.End
-		fmt.Printf(val.Content)
+		end = log.End
+		fmt.Printf(log.Content)
 	}
 	if end {
 		return -1, nil
@@ -157,19 +140,109 @@ func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
 	return offset, nil
 }
 
+func (ali *alisa) countResults(taskID string) (int, error) {
+	params := baseParams(ali.popID)
+	params["Action"] = "GetAlisaTaskResultCount"
+	params["AlisaTaskId"] = taskID
+
+	res, err := ali.requetAndParseResponse(params)
+	if err != nil {
+		return 0, err
+	}
+	var count string
+	if err = json.Unmarshal(*res, &count); err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(count)
+}
+
 // readResults: reads the task results
-func (ali *alisa) getResults(taskID string) error {
-	// TODO(weiguoz): define a result
+func (ali *alisa) getResults(taskID string, batch int) (*alisaTaskResult, error) {
+	if batch <= 0 {
+		return nil, fmt.Errorf("batch shoud be lt 0")
+	}
+	nResults, err := ali.countResults(taskID)
+	if err != nil {
+		return nil, err
+	}
+	var taskRes alisaTaskResult
+	for i := 0; i < nResults; i += batch {
+		params := baseParams(ali.popID)
+		params["Action"] = "GetAlisaTaskResult"
+		params["AlisaTaskId"] = taskID
+		params["Start"] = fmt.Sprintf("%d", i)
+		params["Limit"] = fmt.Sprintf("%d", batch)
+		res, err := ali.requetAndParseResponse(params)
+		if err != nil {
+			return nil, err
+		}
+		parseAlisaTaskResult(res, &taskRes)
+	}
+	return &taskRes, nil
+}
+
+// stop: stops the task.
+// TODO(weiguz): need more tests
+func (ali *alisa) stop(taskID string) (bool, error) {
+	params := baseParams(ali.popID)
+	params["Action"] = "GetAlisaTaskResultCount"
+	params["AlisaTaskId"] = taskID
+	res, err := ali.requetAndParseResponse(params)
+	if err != nil {
+		return false, err
+	}
+	var ok bool
+	if err = json.Unmarshal(*res, &ok); err != nil {
+		return false, err
+	}
+	return ok, nil
+}
+
+func (ali *alisa) requetAndParseResponse(params map[string]string) (*json.RawMessage, error) {
+	rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+	if err != nil {
+		return nil, err
+	}
+	var aliRsp alisaResponse
+	if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
+		return nil, err
+	}
+	if aliRsp.Code != "0" {
+		return nil, fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
+	}
+	return aliRsp.Value, nil
+}
+
+func parseAlisaTaskResult(from *json.RawMessage, to *alisaTaskResult) error {
+	var rawResult alisaTaskRawResult
+	if err := json.Unmarshal(*from, &rawResult); err != nil {
+		return err
+	}
+
+	if len(to.columns) == 0 {
+		bytHeader := []byte(rawResult.Header)
+		var header []string
+		if err := json.Unmarshal(bytHeader, &header); err != nil {
+			return err
+		}
+		for _, h := range header {
+			nt := strings.Split(h, "::")
+			if len(nt) != 2 {
+				return fmt.Errorf("bad header of alisa task result")
+			}
+			to.columns = append(to.columns, alisaTaskResultColumn{nt[0], nt[1]})
+		}
+	}
+
+	bytBody := []byte(rawResult.Body)
+	var body [][]string
+	if err := json.Unmarshal(bytBody, &body); err != nil {
+		return err
+	}
+	for _, line := range body {
+		to.body = append(to.body, line)
+	}
 	return nil
-}
-
-// stop: stops the task
-func (ali *alisa) stop(taskID string) bool {
-	return true
-}
-
-func (ali *alisa) requetAndParseResult(params map[string]string) {
-	return
 }
 
 func baseParams(popID string) map[string]string {

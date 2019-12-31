@@ -34,7 +34,7 @@ func TestAlisaTaskMeta(t *testing.T) {
 	a.NoError(err)
 	a.Equal(rsp.Code, "0")
 
-	var val taskMeta
+	var val alisaTaskMeta
 	err = json.Unmarshal(*rsp.Value, &val)
 	a.NoError(err)
 	a.Equal(val.TaskID, "G3_1")
@@ -54,7 +54,7 @@ func TestAlisaTaskStatus(t *testing.T) {
 	a.NoError(err)
 	a.Equal(rsp.Code, "0")
 
-	var val taskStatus
+	var val alisaTaskStatus
 	err = json.Unmarshal(*rsp.Value, &val)
 	a.NoError(err)
 	a.Equal(val.Status, 2)
@@ -74,7 +74,7 @@ func TestAlisaTaskLog(t *testing.T) {
 	a.NoError(err)
 	a.Equal(rsp.Code, "0")
 
-	var val taskLog
+	var val alisaTaskLog
 	err = json.Unmarshal(*rsp.Value, &val)
 	a.NoError(err)
 	a.Equal(val.End, true)
@@ -114,7 +114,7 @@ func TestAlisaTaskResult(t *testing.T) {
 	a.NoError(err)
 	a.Equal(rsp.Code, "0")
 
-	var val taskRawResult
+	var val alisaTaskRawResult
 	err = json.Unmarshal(*rsp.Value, &val)
 	a.NoError(err)
 
