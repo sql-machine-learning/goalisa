@@ -27,7 +27,7 @@ func TestCreateTask(t *testing.T) {
 	popURL := os.Getenv("POP_URL")
 	popID := os.Getenv("POP_ID")
 	popSecret := os.Getenv("POP_SECRET")
-	verbose := "TBD"
+	verbose := true
 	envs := map[string]string{
 		"SKYNET_ONDUTY":          os.Getenv("SKYNET_ONDUTY"),
 		"SKYNET_ACCESSID":        os.Getenv("SKYNET_ACCESSID"),
@@ -46,10 +46,10 @@ func TestCreateTask(t *testing.T) {
 	a.NoError(err)
 	b64Envs := base64.StdEncoding.EncodeToString(rawEnv)
 
-	alisa, err := newAlisa(popURL, popID, popSecret, verbose, b64Envs)
+	alisa, err := newAlisa(popURL, popID, popSecret, b64Envs, verbose)
 	a.NoError(err)
 	code := "SELECT 2;"
-	taskID, err := alisa.createTask(code)
+	taskID, _, err := alisa.createTask(code)
 	a.NoError(err)
 	a.NotEmpty(taskID)
 }

@@ -30,13 +30,13 @@ type alisa struct {
 	popURL    string
 	popID     string
 	popSecret string
-	verbose   string
+	verbose   bool
 	envs      map[string]string
 	pop       *popClient
 }
 
 // newAlisa init an Alisa client
-func newAlisa(popURL, popID, popSecret, verbose, b64env string) (*alisa, error) {
+func newAlisa(popURL, popID, popSecret, b64env string, verbose bool) (*alisa, error) {
 	buf, err := base64.URLEncoding.DecodeString(b64env)
 	if err != nil {
 		return nil, err
@@ -55,8 +55,8 @@ func newAlisa(popURL, popID, popSecret, verbose, b64env string) (*alisa, error) 
 	}, nil
 }
 
-// createTask returns a task id
-func (ali *alisa) createTask(code string) (string, error) {
+// createTask returns a task id and it's status
+func (ali *alisa) createTask(code string) (string, int, error) {
 	params := baseParams(ali.popID)
 	params["Action"] = "CreateAlisaTask"
 	params["ExecCode"] = code
@@ -72,13 +72,13 @@ func (ali *alisa) createTask(code string) (string, error) {
 
 	res, err := ali.requetAndParseResponse(params)
 	if err != nil {
-		return "", err
+		return "", -1, err
 	}
 	var val alisaTaskMeta
 	if err = json.Unmarshal(*res, &val); err != nil {
-		return "", err
+		return "", -1, err
 	}
-	return val.TaskID, nil
+	return val.TaskID, val.Status, nil
 }
 
 // getStatus: returns the task status of taskID
