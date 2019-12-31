@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,30 +71,96 @@ func (ali *alisa) createTask(code string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// TODO(weiguo): return rspBuf["retValue"]["taskId"] in fact.
-	return string(rspBuf), nil
+	var aliRsp alisaResponse
+	if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
+		return "", err
+	}
+	if aliRsp.Code != "0" {
+		return "", fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
+	}
+	var val taskMeta
+	if err = json.Unmarshal(*aliRsp.Value, &val); err != nil {
+		return "", err
+	}
+	return val.TaskID, nil
 }
 
 // getStatus: returns the task status of taskID
-func (ali *alisa) getStatus(taskID string) int {
-	return 0
+func (ali *alisa) getStatus(taskID string) (int, error) {
+	params := baseParams(ali.popID)
+	params["Action"] = "GetAlisaTask"
+	params["AlisaTaskId"] = taskID
+
+	rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+	if err != nil {
+		return -1, err
+	}
+	var aliRsp alisaResponse
+	if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
+		return -1, err
+	}
+	if aliRsp.Code != "0" {
+		return -1, fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
+	}
+	var val taskStatus
+	if err = json.Unmarshal(*aliRsp.Value, &val); err != nil {
+		return -1, err
+	}
+	return val.Status, nil
 }
 
 // completed: check if the status is completed
 func (ali *alisa) completed(status int) bool {
-	return true
+	return status == 3 || status == 4 || status == 6 || status == 8 || status == 9
 }
 
 // readLogs: reads task logs from `offset`
 // return -1: read to the end
 // return n(>0): keep reading with the offset `n` in the next time
-func (ali *alisa) readLogs(taskID string, offset int) int {
-	return 0
+func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
+	// we don't trust the server returned `end`, so the `maxLogs` used to deal with too many logs.
+	end := false
+	for maxLogs := 10000; !end && maxLogs > 0; maxLogs-- {
+		params := baseParams(ali.popID)
+		params["Action"] = "GetAlisaTaskLog"
+		params["AlisaTaskId"] = taskID
+		params["Offset"] = fmt.Sprintf("%d", offset)
+		rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+		if err != nil {
+			return 0, err
+		}
+		var aliRsp alisaResponse
+		if err = json.Unmarshal(rspBuf, &aliRsp); err != nil {
+			return 0, err
+		}
+		if aliRsp.Code != "0" {
+			return 0, fmt.Errorf("bad result, code=%s, message=%s", aliRsp.Code, aliRsp.Message)
+		}
+		var val taskLog
+		if err = json.Unmarshal(*aliRsp.Value, &val); err != nil {
+			return 0, err
+		}
+		rdLen, err := strconv.Atoi(val.ReadLen)
+		if err != nil {
+			return 0, nil
+		}
+		if rdLen == 0 {
+			return offset, nil
+		}
+		offset += rdLen
+		end = val.End
+		fmt.Printf(val.Content)
+	}
+	if end {
+		return -1, nil
+	}
+	return offset, nil
 }
 
 // readResults: reads the task results
-func (ali *alisa) readResults(taskID string) {
+func (ali *alisa) getResults(taskID string) error {
 	// TODO(weiguoz): define a result
+	return nil
 }
 
 // stop: stops the task

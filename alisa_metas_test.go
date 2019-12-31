@@ -15,7 +15,6 @@ package goalisa
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -131,5 +130,4 @@ func TestAlisaTaskResult(t *testing.T) {
 	a.NoError(err)
 	a.Equal(len(body), 1)
 	a.Equal(len(body[0]), len(header))
-	fmt.Println(body)
 }
