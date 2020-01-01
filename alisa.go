@@ -208,7 +208,7 @@ func (ali *alisa) requetAndParseResponse(params map[string]string) (*json.RawMes
 		return nil, err
 	}
 	if aliRsp.Code != "0" {
-		return nil, fmt.Errorf("bad result, requestId=%s, code=%s, message=%s", aliRsp.RequestID, aliRsp.Code, aliRsp.Message)
+		return nil, fmt.Errorf("bad result, response=%s", string(rspBuf))
 	}
 	return aliRsp.Value, nil
 }

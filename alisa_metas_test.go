@@ -130,4 +130,7 @@ func TestAlisaTaskResult(t *testing.T) {
 	a.NoError(err)
 	a.Equal(len(body), 1)
 	a.Equal(len(body[0]), len(header))
+	a.Equal(body[0][0], "3m^2")
+	a.Equal(body[0][1], "23.8")
+	a.Equal(body[0][2], "56000")
 }
