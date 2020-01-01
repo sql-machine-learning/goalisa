@@ -1,8 +1,8 @@
-># goalisa: A Go `database/sql` driver for alisa
+# goalisa: A Go `database/sql` driver for alisa
 
-[![Build Status](https://travis-ci.org/sql-machine-learning/goalisa.svg?branch=develop)](https://travis-ci.org/sql-machine-learning/goalisa) 
-[![GoDoc](https://godoc.org/github.com/sql-machine-learning/goalisa?status.svg)](https://godoc.org/github.com/sql-machine-learning/goalisa) 
-[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE) 
+[![Build Status](https://travis-ci.org/sql-machine-learning/goalisa.svg?branch=develop)](https://travis-ci.org/sql-machine-learning/goalisa)
+[![GoDoc](https://godoc.org/github.com/sql-machine-learning/goalisa?status.svg)](https://godoc.org/github.com/sql-machine-learning/goalisa)
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sql-machine-learning/goalisa)](https://goreportcard.com/report/github.com/sql-machine-learning/goalisa)
 
 ## What is goalisa
@@ -19,7 +19,7 @@ go get sqlflow.org/goalisa
 Please make sure you have Go 1.13+.
 
 ## For developers
-- `pop`: supplies signature and sends HTTP request.   
+- `pop`: supplies signature and sends HTTP request.
 - `alisa`: encapsulates HTTP action to Alisa SDK. It relays on `pop`.
 - `alisa_wrap`: integrates the API of Alisa SDK and supplies a high-level API. It relays on `alisa`.
 
