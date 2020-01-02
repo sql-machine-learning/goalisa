@@ -19,6 +19,5 @@ script:
   - set -e
   - go get -u golang.org/x/lint/golint
   - python3 -m venv venv && source venv/bin/activate && pip install pre-commit && pre-commit run -a
-  - go build ./...
-  - echo "skip go test since alisa server is not available in public network"
+  - go test -v .
 
