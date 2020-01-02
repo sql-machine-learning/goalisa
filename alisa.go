@@ -185,7 +185,7 @@ func (ali *alisa) getResults(taskID string, batch int) (*alisaTaskResult, error)
 // TODO(weiguz): need more tests
 func (ali *alisa) stop(taskID string) (bool, error) {
 	params := baseParams(ali.popID)
-	params["Action"] = "GetAlisaTaskResultCount"
+	params["Action"] = "StopAlisaTask"
 	params["AlisaTaskId"] = taskID
 	res, err := ali.requetAndParseResponse(params)
 	if err != nil {
