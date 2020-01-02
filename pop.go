@@ -43,18 +43,16 @@ func newPOP(timeout time.Duration) *popClient {
 	}
 }
 
-func (pop *popClient) request(params map[string]string, url, accessSecret string) (string, error) {
+func (pop *popClient) request(params map[string]string, url, accessSecret string) ([]byte, error) {
 	sign := pop.signature(params, "POST", accessSecret)
 	params["Signature"] = sign
 
 	rsp, err := pop.PostForm(url, convertMap2URLValues(params))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer rsp.Body.Close()
-
-	body, _ := ioutil.ReadAll(rsp.Body)
-	return string(body), nil
+	return ioutil.ReadAll(rsp.Body)
 }
 
 // Follow https://help.aliyun.com/document_detail/25492.html
