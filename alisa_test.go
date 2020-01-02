@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -62,6 +63,7 @@ func TestCreateTask(t *testing.T) {
 	a.NoError(err)
 	code := "SELECT 2;"
 	taskID, _, err := ali.createTask(code)
+	time.Sleep(time.Second * 2) // to avoid touching the flow-control
 	a.NoError(err)
 	a.NotEmpty(taskID)
 }
