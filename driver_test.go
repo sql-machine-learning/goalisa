@@ -14,6 +14,8 @@
 package goalisa
 
 import (
+	"encoding/base64"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +23,8 @@ import (
 
 func TestOpen(t *testing.T) {
 	a := assert.New(t)
-	var dr Driver
-	_, err := dr.Open("alisa://u:p@endpoint?a=1")
+	d := &Driver{}
+	conn, err := d.Open(fmt.Sprintf("pop_access_id:pop_access_key@pop_url?env=%s", base64.StdEncoding.EncodeToString([]byte(`{"value1": "param1"}`))))
 	a.NoError(err)
+	a.NotNil(conn)
 }

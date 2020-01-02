@@ -15,12 +15,10 @@ package goalisa
 
 import (
 	"database/sql/driver"
-	"net/http"
 )
 
 type alisaConn struct {
-	*http.Client
-	*Config
+	ali *alisa
 }
 
 // Begin, unimplemented
