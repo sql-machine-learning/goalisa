@@ -38,9 +38,9 @@ func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult
 	var err error
 	logOffset := 0
 	for !ali.completed(status) {
-		if status == 1 || status == 11 {
+		if status == alisaTaskWaiting || status == alisaTaskAllocate {
 			fmt.Println("waiting for resources")
-		} else if status == 2 && logOffset >= 0 {
+		} else if status == alisaTaskRunning && logOffset >= 0 {
 			if logOffset, err = ali.readLogs(taskID, logOffset); err != nil {
 				return nil, err
 			}
@@ -51,7 +51,7 @@ func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult
 		}
 	}
 
-	if status == 9 {
+	if status == alisaTaskExpired {
 		fmt.Println("waiting for resources timeout")
 	} else {
 		if logOffset >= 0 {
@@ -59,7 +59,7 @@ func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult
 				return nil, err
 			}
 		}
-		if status == 3 {
+		if status == alisaTaskCompleted {
 			return ali.getResults(taskID, readResultsBatch)
 		}
 	}
@@ -75,7 +75,7 @@ func (ali *alisa) readResultQuietly(taskID string, status int) (*alisaTaskResult
 		}
 	}
 
-	if status == 3 {
+	if status == alisaTaskCompleted {
 		return ali.getResults(taskID, readResultsBatch)
 	}
 	return nil, fmt.Errorf("invalid task status=%d", status)

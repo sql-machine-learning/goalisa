@@ -24,7 +24,21 @@ import (
 	"github.com/google/uuid"
 )
 
-const maxLogNum = 1000
+const (
+	// alisaTask*: task status returned by getStatus()
+	alisaTaskWaiting    = 1
+	alisaTaskAllocate   = 11
+	alisaTaskRunning    = 2
+	alisaTaskCompleted  = 3
+	alisaTaskError      = 4
+	alisaTaskFailover   = 5
+	alisaTaskKilled     = 6
+	alisaTaskRerun      = 8
+	alisaTaskExpired    = 9
+	alisaTaskAlisaRerun = 10
+
+	maxLogNum = 1000
+)
 
 type alisa struct {
 	popURL    string
@@ -95,12 +109,13 @@ func (ali *alisa) getStatus(taskID string) (int, error) {
 	if err = json.Unmarshal(*res, &val); err != nil {
 		return -1, err
 	}
+	// alisaTask*
 	return val.Status, nil
 }
 
 // completed: check if the status is completed
 func (ali *alisa) completed(status int) bool {
-	return status == 3 || status == 4 || status == 6 || status == 8 || status == 9
+	return status == alisaTaskCompleted || status == alisaTaskError || status == alisaTaskKilled || status == alisaTaskRerun || status == alisaTaskExpired
 }
 
 // readLogs: reads task logs from `offset`
