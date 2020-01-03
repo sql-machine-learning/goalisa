@@ -24,7 +24,10 @@ import (
 
 var errSkipTesting = fmt.Errorf("skip test")
 
-func newAlisaByEnvForTesting() *alisa {
+func newAlisaFromEnv(t *testing.T) *alisa {
+	if os.Getenv("POP_SECRET") == "" {
+		t.Skip()
+	}
 	popURL := os.Getenv("POP_URL")
 	popID := os.Getenv("POP_ID")
 	popSecret := os.Getenv("POP_SECRET")
@@ -46,10 +49,7 @@ func newAlisaByEnvForTesting() *alisa {
 
 func TestCreateTask(t *testing.T) {
 	a := assert.New(t)
-	if os.Getenv("POP_SECRET") == "" {
-		t.Skip()
-	}
-	ali := newAlisaByEnvForTesting()
+	ali := newAlisaFromEnv(t)
 	code := "SELECT 2;"
 	taskID, _, err := ali.createTask(code)
 	time.Sleep(time.Second * 2) // to avoid touching the flow-control

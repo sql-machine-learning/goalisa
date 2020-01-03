@@ -14,7 +14,6 @@
 package goalisa
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,10 +21,7 @@ import (
 
 func TestExecAlisaTask(t *testing.T) {
 	a := assert.New(t)
-	if os.Getenv("POP_SECRET") == "" {
-		t.Skip()
-	}
-	ali := newAlisaByEnvForTesting()
+	ali := newAlisaFromEnv(t)
 	cmd := "select \"Alice\" as name, 23.8 as age, 56000 as salary;"
 	res, err := ali.exec(cmd)
 	a.NoError(err)
