@@ -26,7 +26,6 @@ import (
 const (
 	// alisaTask*: task status returned by getStatus()
 	alisaTaskWaiting    = 1
-	alisaTaskAllocate   = 11
 	alisaTaskRunning    = 2
 	alisaTaskCompleted  = 3
 	alisaTaskError      = 4
@@ -35,8 +34,10 @@ const (
 	alisaTaskRerun      = 8
 	alisaTaskExpired    = 9
 	alisaTaskAlisaRerun = 10
+	alisaTaskAllocate   = 11
 
-	maxLogNum = 1000
+	// used to deal with too many logs.
+	maxLogNum = 2000
 )
 
 type alisa struct {
@@ -102,7 +103,6 @@ func (ali *alisa) completed(status int) bool {
 // return -1: read to the end
 // return n(>0): keep reading with the offset `n` in the next time
 func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
-	// the `maxLogs` used to deal with too many logs.
 	end := false
 	for i := 0; i < maxLogNum && !end; i++ {
 		params := baseParams(ali.POPAccessID)
@@ -127,7 +127,7 @@ func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
 		}
 		offset += rdLen
 		end = log.End
-		fmt.Printf(log.Content)
+		fmt.Print(log.Content)
 	}
 	if end {
 		return -1, nil
