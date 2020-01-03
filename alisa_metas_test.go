@@ -24,8 +24,8 @@ func TestAlisaTaskMeta(t *testing.T) {
 	a := assert.New(t)
 	byt := []byte(`{
 		"returnCode":"0",
-		"returnValue":{"alisaTaskId":"G3_1","createTime":1577759588481,"logPath":"/path/to/log","localLogPath":"/20191231/path/to/your/local/","status":1},
-		"requestId":"C3D87399-447E-4C53-B008-C1787C379D2E",
+		"returnValue":{"alisaTaskId":"t1","createTime":1577759588481,"logPath":"/path/to/log","localLogPath":"/20191231/path/to/your/local/","status":1},
+		"requestId":"C3D87399",
 		"returnMessage":"ok",
 		"returnErrorSolution":"keep going"
 	}`)
@@ -37,15 +37,15 @@ func TestAlisaTaskMeta(t *testing.T) {
 	var val alisaTaskMeta
 	err = json.Unmarshal(*rsp.Value, &val)
 	a.NoError(err)
-	a.Equal(val.TaskID, "G3_1")
+	a.Equal(val.TaskID, "t1")
 }
 
 func TestAlisaTaskStatus(t *testing.T) {
 	a := assert.New(t)
 	byt := []byte(`{
 		"returnCode":"0",
-		"returnValue":{"nodeName":"alisa-test011167179122.na62sqa","alisaTaskId":"T3_0008271210","filePath":"/20191231/sqlFlow/13/27/00/ab09u281vsw9dmgh6kyimmvt/","nodeAddress":"11.167.179.122","status":2,"ossPath":"prod/sqlFlow/2019/12/31/6reg65oxvtng7hwxnyimyqs4"},
-		"requestId":"0b9e82cd15777700362005616d1603",
+		"returnValue":{"nodeName":"alisa-t","alisaTaskId":"t2","filePath":"sw9dmgh6kyimmvt","nodeAddress":"10.0.0.12","status":2,"ossPath":"6revtngimyqs4"},
+		"requestId":"0b9e82c5616d1603",
 		"returnMessage":"ok",
 		"returnErrorSolution":"keep going"
 	}`)
@@ -65,7 +65,7 @@ func TestAlisaTaskLog(t *testing.T) {
 	byt := []byte(`{
 		"returnCode":"0",
 		"returnValue":{"readLength":"1","logMsg":"R","isEnd":true},
-		"requestId":"0b9e8d8215777702027777560d135b",
+		"requestId":"0b9e8d8777560d135b",
 		"returnMessage":"ok",
 		"returnErrorSolution":"keep going"
 	}`)
