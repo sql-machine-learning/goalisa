@@ -33,19 +33,25 @@ func (ac *alisaConn) Prepare(query string) (driver.Stmt, error) {
 
 // Close connection
 func (ac *alisaConn) Close() error {
-	// TODO(weiguoz)
+	ac.ali = nil
 	return nil
 }
 
 // Exec implements database/sql/driver.Execer.
 // Note: result is always nil
 func (ac *alisaConn) Exec(query string, args []driver.Value) (driver.Result, error) {
-	// TODO(weiguoz), return alisaResult
+	_, err := ac.ali.exec(query)
+	if err != nil {
+		return nil, err
+	}
 	return &alisaResult{-1, -1}, nil
 }
 
 // Query implements database/sql/driver.Queryer
 func (ac *alisaConn) Query(query string, args []driver.Value) (driver.Rows, error) {
-	// TODO(weiguo), returns rows
-	return &alisaRows{}, nil
+	result, err := ac.ali.exec(query)
+	if err != nil {
+		return nil, err
+	}
+	return &alisaRows{rowIdx: 0, result: result}, nil
 }
