@@ -24,7 +24,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	//	"github.com/google/uuid"
 )
 
 // reuse http client
@@ -57,6 +56,7 @@ func (pop *popClient) request(params map[string]string, url, accessSecret string
 
 // Follow https://help.aliyun.com/document_detail/25492.html
 func (pop *popClient) signature(params map[string]string, httpMethod, secret string) string {
+	// FIXME(weiguoz): dealing with empty params
 	keys := make([]string, 0, len(params))
 	for k := range params {
 		keys = append(keys, k)
