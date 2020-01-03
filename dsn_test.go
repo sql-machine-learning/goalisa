@@ -33,11 +33,11 @@ func TestParseDSN(t *testing.T) {
 	cfg, err := ParseDSN(dsn)
 	a.NoError(err)
 	expected := Config{
-		POPAccessID:  "pid",
-		POPAccessKey: "pkey",
-		POPURL:       "example.com",
-		Env:          map[string]string{"param1": "value1"},
-		Verbose:      false}
+		POPAccessID:     "pid",
+		POPAccessSecret: "pkey",
+		POPURL:          "example.com",
+		Env:             map[string]string{"param1": "value1"},
+		Verbose:         false}
 	a.Equal(expected, *cfg)
 }
 
@@ -57,11 +57,11 @@ func TestParseDSNError(t *testing.T) {
 func TestConfig_FormatDSN(t *testing.T) {
 	a := assert.New(t)
 	cfg := Config{
-		POPAccessID:  "pid",
-		POPAccessKey: "pkey",
-		POPURL:       "example.com",
-		Env:          map[string]string{"param1": "value1"},
-		Verbose:      false}
+		POPAccessID:     "pid",
+		POPAccessSecret: "pkey",
+		POPURL:          "example.com",
+		Env:             map[string]string{"param1": "value1"},
+		Verbose:         false}
 	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=false`
 	a.Equal(expected, cfg.FormatDSN())
 }
@@ -93,5 +93,5 @@ func newConfigFromEnv(t *testing.T) *Config {
 		"SKYNET_BIZDATE":         os.Getenv("SKYNET_BIZDATE"),
 		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
 	}
-	return &Config{POPAccessID: popID, POPAccessKey: popSecret, POPURL: popURL, Verbose: verbose, Env: envs}
+	return &Config{POPAccessID: popID, POPAccessSecret: popSecret, POPURL: popURL, Verbose: verbose, Env: envs}
 }

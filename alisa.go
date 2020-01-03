@@ -194,7 +194,7 @@ func (ali *alisa) stop(taskID string) (bool, error) {
 }
 
 func (ali *alisa) requetAndParseResponse(params map[string]string) (*json.RawMessage, error) {
-	rspBuf, err := ali.pop.request(params, ali.POPURL, ali.POPAccessKey)
+	rspBuf, err := ali.pop.request(params, ali.POPURL, ali.POPAccessSecret)
 	if err != nil {
 		return nil, err
 	}

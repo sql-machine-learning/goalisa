@@ -29,12 +29,12 @@ var (
 )
 
 // Config is the deserialization of connect string, the connection string should of format:
-// pop_access_id:pop_access_key@pop_url?env=..
+// pop_access_id:pop_access_secret@pop_url?env=..
 type Config struct {
 	// POP config
-	POPAccessID  string
-	POPAccessKey string
-	POPURL       string
+	POPAccessID     string
+	POPAccessSecret string
+	POPURL          string
 	// Environment variable JSON encoded in base64 format.
 	Env map[string]string
 	// verbose denotes whether to print logs to the terminal
@@ -45,9 +45,9 @@ type Config struct {
 func ParseDSN(dsn string) (*Config, error) {
 	sub := reDSN.FindStringSubmatch(dsn)
 	if len(sub) != 5 {
-		return nil, fmt.Errorf(`dsn %s doesn't match pop_access_id:pop_access_key@pop_url?params`, dsn)
+		return nil, fmt.Errorf(`dsn %s doesn't match pop_access_id:pop_access_secret@pop_url?params`, dsn)
 	}
-	pid, pkey, purl := sub[1], sub[2], sub[3]
+	pid, ps, purl := sub[1], sub[2], sub[3]
 
 	kvs, err := url.ParseQuery(sub[4])
 	if err != nil {
@@ -72,7 +72,7 @@ func ParseDSN(dsn string) (*Config, error) {
 		verbose = true
 	}
 
-	return &Config{POPAccessID: pid, POPAccessKey: pkey, POPURL: purl, Env: env, Verbose: verbose}, nil
+	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose}, nil
 }
 
 func encodeEnv(env map[string]string) string {
@@ -108,6 +108,6 @@ func decodeEnv(b64env string) (map[string]string, error) {
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
 	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s`,
-		cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL,
+		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL,
 		encodeEnv(cfg.Env), strconv.FormatBool(cfg.Verbose))
 }
