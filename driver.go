@@ -35,8 +35,7 @@ func (dr Driver) Open(dsn string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	// FIXME(tony): make verbose configurable
-	alisa, err := newAlisa(config.POPURL, config.POPAccessID, config.POPAccessKey, config.Env, false)
+	alisa, err := newAlisa(config.POPURL, config.POPAccessID, config.POPAccessKey, encodeEnv(config.Env), false)
 	if err != nil {
 		return nil, err
 	}

@@ -14,10 +14,14 @@
 package goalisa
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -32,8 +36,7 @@ type Config struct {
 	POPAccessKey string
 	POPURL       string
 	// Environment variable JSON encoded in base64 format.
-	// This variable should be passed through to the http request
-	Env string
+	Env map[string]string
 	// verbose denotes whether to print logs to the terminal
 	Verbose bool
 }
@@ -59,18 +62,52 @@ func ParseDSN(dsn string) (*Config, error) {
 		}
 	}
 
+	env, err := decodeEnv(kvs.Get("env"))
+	if err != nil {
+		return nil, err
+	}
+
 	verbose := false
 	if kvs.Get("verbose") == "true" {
 		verbose = true
 	}
 
-	return &Config{
-		POPAccessID: pid, POPAccessKey: pkey, POPURL: purl,
-		Env:     kvs.Get("env"),
-		Verbose: verbose}, nil
+	return &Config{POPAccessID: pid, POPAccessKey: pkey, POPURL: purl, Env: env, Verbose: verbose}, nil
+}
+
+func encodeEnv(env map[string]string) string {
+	// We sort the env params to ensure the consistent encoding
+	keys := []string{}
+	for k := range env {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	kvStrs := []string{}
+	for _, k := range keys {
+		kvStrs = append(kvStrs, fmt.Sprintf(`"%s":"%s"`, k, env[k]))
+	}
+	jsonStr := `{` + strings.Join(kvStrs, `,`) + `}`
+	return base64.URLEncoding.EncodeToString([]byte(jsonStr))
+}
+
+func decodeEnv(b64env string) (map[string]string, error) {
+	// NOTE(tony): we use url.ParseQuery to parse parameters in ParseDSN,
+	// so we use URL-compatible base64 format.
+	buf, err := base64.URLEncoding.DecodeString(b64env)
+	if err != nil {
+		return nil, err
+	}
+	var envs map[string]string
+	if err := json.Unmarshal(buf, &envs); err != nil {
+		return nil, err
+	}
+	return envs, nil
 }
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s`, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL, cfg.Env, strconv.FormatBool(cfg.Verbose))
+	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s`,
+		cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL,
+		encodeEnv(cfg.Env), strconv.FormatBool(cfg.Verbose))
 }

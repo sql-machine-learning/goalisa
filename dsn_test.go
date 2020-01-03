@@ -14,20 +14,28 @@
 package goalisa
 
 import (
+	"encoding/base64"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
+var b64EnvStr = base64.URLEncoding.EncodeToString([]byte(`{"param1":"value1"}`))
+
+func TestEncodeEnv(t *testing.T) {
+	a := assert.New(t)
+	a.Equal(b64EnvStr, encodeEnv(map[string]string{"param1": "value1"}))
+}
+
 func TestParseDSN(t *testing.T) {
 	a := assert.New(t)
-	dsn := `pid:pkey@example.com?env=sadfjkiem`
+	dsn := `pid:pkey@example.com?env=` + b64EnvStr
 	cfg, err := ParseDSN(dsn)
 	a.NoError(err)
 	expected := Config{
 		POPAccessID:  "pid",
 		POPAccessKey: "pkey",
 		POPURL:       "example.com",
-		Env:          "sadfjkiem",
+		Env:          map[string]string{"param1": "value1"},
 		Verbose:      false}
 	a.Equal(expected, *cfg)
 }
@@ -35,9 +43,9 @@ func TestParseDSN(t *testing.T) {
 func TestParseDSNError(t *testing.T) {
 	a := assert.New(t)
 	badDSN := []string{
-		`:pkey@example.com?env=sadfjkiem`,
-		`pid:@example.com?env=sadfjkiem`,
-		`pid:pkey@?env=sadfjkiem`,
+		`:pkey@example.com?env=` + b64EnvStr,
+		`pid:@example.com?env=` + b64EnvStr,
+		`pid:pkey@?env=` + b64EnvStr,
 	}
 	for _, dsn := range badDSN {
 		_, err := ParseDSN(dsn)
@@ -51,15 +59,15 @@ func TestConfig_FormatDSN(t *testing.T) {
 		POPAccessID:  "pid",
 		POPAccessKey: "pkey",
 		POPURL:       "example.com",
-		Env:          "sadfjkiem",
+		Env:          map[string]string{"param1": "value1"},
 		Verbose:      false}
-	expected := `pid:pkey@example.com?env=sadfjkiem&verbose=false`
+	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=false`
 	a.Equal(expected, cfg.FormatDSN())
 }
 
 func TestRoundTrip(t *testing.T) {
 	a := assert.New(t)
-	expected := `pid:pkey@example.com?env=sadfjkiem&verbose=true`
+	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=true`
 	cfg, err := ParseDSN(expected)
 	a.NoError(err)
 	a.Equal(expected, cfg.FormatDSN())
