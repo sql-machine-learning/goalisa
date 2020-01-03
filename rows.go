@@ -49,7 +49,7 @@ func (ar *alisaRows) Columns() []string {
 //
 // NOTE(weiguoz): `\N` denotes nil, even outher types
 func (ar *alisaRows) Next(dst []driver.Value) error {
-	if ar.rowIdx >= len(ar.result.columns) {
+	if ar.rowIdx >= len(ar.result.body) {
 		return io.EOF
 	}
 
