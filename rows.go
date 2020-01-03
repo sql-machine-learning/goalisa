@@ -15,37 +15,59 @@ package goalisa
 
 import (
 	"database/sql/driver"
+	"io"
 	"reflect"
+	"strings"
 )
 
 var builtinString = reflect.TypeOf(string(""))
 
 type alisaRows struct {
-	// TODO(weiguoz)
+	rowIdx int
+	result *alisaTaskResult
 }
 
+// Close closes the rows iterator.
 func (ar *alisaRows) Close() error {
-	// TODO(weiguoz)
+	ar.rowIdx = -1
+	ar.result = nil
 	return nil
 }
 
+// Columns returns the names of the columns.
 func (ar *alisaRows) Columns() []string {
-	// TODO(weiguoz)
-	return nil
+	columnNames := []string{}
+	for _, c := range ar.result.columns {
+		columnNames = append(columnNames, c.name)
+	}
+	return columnNames
 }
 
-// Notice: `\N` denotes nil, even outher types
+// Next is called to populate the next row of data into
+// the provided slice. The provided slice will be the same
+// size as the Columns() are wide.
+//
+// NOTE(weiguoz): `\N` denotes nil, even outher types
 func (ar *alisaRows) Next(dst []driver.Value) error {
-	// TODO(weiguoz)
+	if ar.rowIdx >= len(ar.result.columns) {
+		return io.EOF
+	}
+
+	// Fill in dest with one single row data.
+	for colIndex, value := range ar.result.body[ar.rowIdx] {
+		dst[colIndex] = value
+	}
+
+	ar.rowIdx++
 	return nil
 }
 
+// RowsColumnTypeScanType always gives string type
 func (ar *alisaRows) ColumnTypeScanType(i int) reflect.Type {
-	// TODO(weiguoz)
 	return builtinString
 }
 
+// RowsColumnTypeDatabaseTypeName returns the database system type name in uppercase.
 func (ar *alisaRows) ColumnTypeDatabaseTypeName(i int) string {
-	// TODO(weiguoz)
-	return ""
+	return strings.ToUpper(ar.result.columns[i].typ)
 }
