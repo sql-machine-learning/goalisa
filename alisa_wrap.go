@@ -28,7 +28,7 @@ func (ali *alisa) exec(cmd string) (*alisaTaskResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	if ali.verbose {
+	if ali.Verbose {
 		return ali.readResultWithLog(taskID, status)
 	}
 	return ali.readResultQuietly(taskID, status)
