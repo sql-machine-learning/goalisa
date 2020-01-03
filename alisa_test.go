@@ -14,8 +14,6 @@
 package goalisa
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -26,7 +24,7 @@ import (
 
 var errSkipTesting = fmt.Errorf("skip test")
 
-func newAlisaByEnvForTesting() (*alisa, error) {
+func newAlisaByEnvForTesting() *alisa {
 	popURL := os.Getenv("POP_URL")
 	popID := os.Getenv("POP_ID")
 	popSecret := os.Getenv("POP_SECRET")
@@ -42,25 +40,16 @@ func newAlisaByEnvForTesting() (*alisa, error) {
 		"SKYNET_BIZDATE":         os.Getenv("SKYNET_BIZDATE"),
 		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
 	}
-
-	if len(popSecret) == 0 || len(envs["SKYNET_ACCESSKEY"]) == 0 {
-		return nil, errSkipTesting
-	}
-	rawEnv, err := json.Marshal(envs)
-	if err != nil {
-		return nil, err
-	}
-	b64Envs := base64.StdEncoding.EncodeToString(rawEnv)
-	return newAlisa(popURL, popID, popSecret, b64Envs, verbose)
+	cfg := &Config{POPAccessID: popID, POPAccessKey: popSecret, POPURL: popURL, Verbose: verbose, Env: envs}
+	return newAlisa(cfg)
 }
 
 func TestCreateTask(t *testing.T) {
 	a := assert.New(t)
-	ali, err := newAlisaByEnvForTesting()
-	if err == errSkipTesting {
+	if os.Getenv("POP_SECRET") == "" {
 		t.Skip()
 	}
-	a.NoError(err)
+	ali := newAlisaByEnvForTesting()
 	code := "SELECT 2;"
 	taskID, _, err := ali.createTask(code)
 	time.Sleep(time.Second * 2) // to avoid touching the flow-control

@@ -35,7 +35,7 @@ func (dr Driver) Open(dsn string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	alisa, err := newAlisa(config.POPURL, config.POPAccessID, config.POPAccessKey, encodeEnv(config.Env), false)
+	alisa := newAlisa(config)
 	if err != nil {
 		return nil, err
 	}

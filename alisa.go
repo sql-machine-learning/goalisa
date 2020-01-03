@@ -14,7 +14,6 @@
 package goalisa
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -41,37 +40,18 @@ const (
 )
 
 type alisa struct {
-	popURL    string
-	popID     string
-	popSecret string
-	verbose   bool
-	envs      map[string]string
-	pop       *popClient
+	*Config
+	pop *popClient
 }
 
 // newAlisa init an Alisa client
-func newAlisa(popURL, popID, popSecret, b64env string, verbose bool) (*alisa, error) {
-	buf, err := base64.URLEncoding.DecodeString(b64env)
-	if err != nil {
-		return nil, err
-	}
-	var envs map[string]string
-	if err := json.Unmarshal(buf, &envs); err != nil {
-		return nil, err
-	}
-	return &alisa{
-		popURL,
-		popID,
-		popSecret,
-		verbose,
-		envs,
-		newPOP(-1),
-	}, nil
+func newAlisa(cfg *Config) *alisa {
+	return &alisa{cfg, newPOP(-1)}
 }
 
 // createTask returns a task id and it's status
 func (ali *alisa) createTask(code string) (string, int, error) {
-	params := baseParams(ali.popID)
+	params := baseParams(ali.POPAccessID)
 	params["Action"] = "CreateAlisaTask"
 	params["ExecCode"] = code
 
@@ -80,8 +60,8 @@ func (ali *alisa) createTask(code string) (string, int, error) {
 	params["PluginName"] = "odps_sql"
 	params["Exec"] = "/opt/taobao/tbdpapp/dwcommonwrapper/dwcommonwrapper.sh"
 	params["UniqueKey"] = fmt.Sprintf("%d", time.Now().UnixNano())
-	params["ExecTarget"] = ali.envs["ALISA_TASK_EXEC_TARGET"]
-	envBuf, _ := json.Marshal(ali.envs)
+	params["ExecTarget"] = ali.Env["ALISA_TASK_EXEC_TARGET"]
+	envBuf, _ := json.Marshal(ali.Env)
 	params["Envs"] = string(envBuf)
 
 	res, err := ali.requetAndParseResponse(params)
@@ -97,7 +77,7 @@ func (ali *alisa) createTask(code string) (string, int, error) {
 
 // getStatus: returns the task status of taskID
 func (ali *alisa) getStatus(taskID string) (int, error) {
-	params := baseParams(ali.popID)
+	params := baseParams(ali.POPAccessID)
 	params["Action"] = "GetAlisaTask"
 	params["AlisaTaskId"] = taskID
 
@@ -125,7 +105,7 @@ func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
 	// the `maxLogs` used to deal with too many logs.
 	end := false
 	for i := 0; i < maxLogNum && !end; i++ {
-		params := baseParams(ali.popID)
+		params := baseParams(ali.POPAccessID)
 		params["Action"] = "GetAlisaTaskLog"
 		params["AlisaTaskId"] = taskID
 		params["Offset"] = fmt.Sprintf("%d", offset)
@@ -156,7 +136,7 @@ func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
 }
 
 func (ali *alisa) countResults(taskID string) (int, error) {
-	params := baseParams(ali.popID)
+	params := baseParams(ali.POPAccessID)
 	params["Action"] = "GetAlisaTaskResultCount"
 	params["AlisaTaskId"] = taskID
 
@@ -182,7 +162,7 @@ func (ali *alisa) getResults(taskID string, batch int) (*alisaTaskResult, error)
 	}
 	var taskRes alisaTaskResult
 	for i := 0; i < nResults; i += batch {
-		params := baseParams(ali.popID)
+		params := baseParams(ali.POPAccessID)
 		params["Action"] = "GetAlisaTaskResult"
 		params["AlisaTaskId"] = taskID
 		params["Start"] = fmt.Sprintf("%d", i)
@@ -199,7 +179,7 @@ func (ali *alisa) getResults(taskID string, batch int) (*alisaTaskResult, error)
 // stop: stops the task.
 // TODO(weiguz): need more tests
 func (ali *alisa) stop(taskID string) (bool, error) {
-	params := baseParams(ali.popID)
+	params := baseParams(ali.POPAccessID)
 	params["Action"] = "StopAlisaTask"
 	params["AlisaTaskId"] = taskID
 	res, err := ali.requetAndParseResponse(params)
@@ -214,7 +194,7 @@ func (ali *alisa) stop(taskID string) (bool, error) {
 }
 
 func (ali *alisa) requetAndParseResponse(params map[string]string) (*json.RawMessage, error) {
-	rspBuf, err := ali.pop.request(params, ali.popURL, ali.popSecret)
+	rspBuf, err := ali.pop.request(params, ali.POPURL, ali.POPAccessKey)
 	if err != nil {
 		return nil, err
 	}
