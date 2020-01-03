@@ -27,7 +27,8 @@ func TestParseDSN(t *testing.T) {
 		POPAccessID:  "pid",
 		POPAccessKey: "pkey",
 		POPURL:       "example.com",
-		Env:          "sadfjkiem"}
+		Env:          "sadfjkiem",
+		Verbose:      false}
 	a.Equal(expected, *cfg)
 }
 
@@ -50,14 +51,15 @@ func TestConfig_FormatDSN(t *testing.T) {
 		POPAccessID:  "pid",
 		POPAccessKey: "pkey",
 		POPURL:       "example.com",
-		Env:          "sadfjkiem"}
-	expected := `pid:pkey@example.com?env=sadfjkiem`
+		Env:          "sadfjkiem",
+		Verbose:      false}
+	expected := `pid:pkey@example.com?env=sadfjkiem&verbose=false`
 	a.Equal(expected, cfg.FormatDSN())
 }
 
 func TestRoundTrip(t *testing.T) {
 	a := assert.New(t)
-	expected := `pid:pkey@example.com?env=sadfjkiem`
+	expected := `pid:pkey@example.com?env=sadfjkiem&verbose=true`
 	cfg, err := ParseDSN(expected)
 	a.NoError(err)
 	a.Equal(expected, cfg.FormatDSN())

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strconv"
 )
 
 var (
@@ -33,6 +34,8 @@ type Config struct {
 	// Environment variable JSON encoded in base64 format.
 	// This variable should be passed through to the http request
 	Env string
+	// verbose denotes whether to print logs to the terminal
+	Verbose bool
 }
 
 // ParseDSN deserialize the connect string
@@ -56,12 +59,18 @@ func ParseDSN(dsn string) (*Config, error) {
 		}
 	}
 
+	verbose := false
+	if kvs.Get("verbose") == "true" {
+		verbose = true
+	}
+
 	return &Config{
 		POPAccessID: pid, POPAccessKey: pkey, POPURL: purl,
-		Env: kvs.Get("env")}, nil
+		Env:     kvs.Get("env"),
+		Verbose: verbose}, nil
 }
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	return fmt.Sprintf(`%s:%s@%s?env=%s`, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL, cfg.Env)
+	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s`, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL, cfg.Env, strconv.FormatBool(cfg.Verbose))
 }
