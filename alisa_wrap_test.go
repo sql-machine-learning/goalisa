@@ -21,11 +21,7 @@ import (
 
 func TestExecAlisaTask(t *testing.T) {
 	a := assert.New(t)
-	ali, err := newAlisaByEnvForTesting()
-	if err == errSkipTesting {
-		t.Skip()
-	}
-	a.NoError(err)
+	ali := newAlisaFromEnv(t)
 	cmd := "select \"Alice\" as name, 23.8 as age, 56000 as salary;"
 	res, err := ali.exec(cmd)
 	a.NoError(err)

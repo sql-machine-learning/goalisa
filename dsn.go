@@ -14,9 +14,14 @@
 package goalisa
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -24,24 +29,25 @@ var (
 )
 
 // Config is the deserialization of connect string, the connection string should of format:
-// pop_access_id:pop_access_key@pop_url?env=..
+// pop_access_id:pop_access_secret@pop_url?env=..
 type Config struct {
 	// POP config
-	POPAccessID  string
-	POPAccessKey string
-	POPURL       string
+	POPAccessID     string
+	POPAccessSecret string
+	POPURL          string
 	// Environment variable JSON encoded in base64 format.
-	// This variable should be passed through to the http request
-	Env string
+	Env map[string]string
+	// verbose denotes whether to print logs to the terminal
+	Verbose bool
 }
 
 // ParseDSN deserialize the connect string
 func ParseDSN(dsn string) (*Config, error) {
 	sub := reDSN.FindStringSubmatch(dsn)
 	if len(sub) != 5 {
-		return nil, fmt.Errorf(`dsn %s doesn't match pop_access_id:pop_access_key@pop_url?params`, dsn)
+		return nil, fmt.Errorf(`dsn %s doesn't match pop_access_id:pop_access_secret@pop_url?params`, dsn)
 	}
-	pid, pkey, purl := sub[1], sub[2], sub[3]
+	pid, ps, purl := sub[1], sub[2], sub[3]
 
 	kvs, err := url.ParseQuery(sub[4])
 	if err != nil {
@@ -56,12 +62,52 @@ func ParseDSN(dsn string) (*Config, error) {
 		}
 	}
 
-	return &Config{
-		POPAccessID: pid, POPAccessKey: pkey, POPURL: purl,
-		Env: kvs.Get("env")}, nil
+	env, err := decodeEnv(kvs.Get("env"))
+	if err != nil {
+		return nil, err
+	}
+
+	verbose := false
+	if kvs.Get("verbose") == "true" {
+		verbose = true
+	}
+
+	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose}, nil
+}
+
+func encodeEnv(env map[string]string) string {
+	// We sort the env params to ensure the consistent encoding
+	keys := []string{}
+	for k := range env {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	kvStrs := []string{}
+	for _, k := range keys {
+		kvStrs = append(kvStrs, fmt.Sprintf(`"%s":"%s"`, k, env[k]))
+	}
+	jsonStr := `{` + strings.Join(kvStrs, `,`) + `}`
+	return base64.URLEncoding.EncodeToString([]byte(jsonStr))
+}
+
+func decodeEnv(b64env string) (map[string]string, error) {
+	// NOTE(tony): we use url.ParseQuery to parse parameters in ParseDSN,
+	// so we use URL-compatible base64 format.
+	buf, err := base64.URLEncoding.DecodeString(b64env)
+	if err != nil {
+		return nil, err
+	}
+	var envs map[string]string
+	if err := json.Unmarshal(buf, &envs); err != nil {
+		return nil, err
+	}
+	return envs, nil
 }
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	return fmt.Sprintf(`%s:%s@%s?env=%s`, cfg.POPAccessID, cfg.POPAccessKey, cfg.POPURL, cfg.Env)
+	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s`,
+		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL,
+		encodeEnv(cfg.Env), strconv.FormatBool(cfg.Verbose))
 }

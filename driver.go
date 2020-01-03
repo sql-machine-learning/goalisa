@@ -28,15 +28,12 @@ type Driver struct{}
 
 // Open returns a connection
 func (dr Driver) Open(dsn string) (driver.Conn, error) {
-	// TODO(tony): merge config struct and alisa struct since they have duplicated
-	// code like POPURL, POPAccessID, etc.
 	config, err := ParseDSN(dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	// FIXME(tony): make verbose configurable
-	alisa, err := newAlisa(config.POPURL, config.POPAccessID, config.POPAccessKey, config.Env, false)
+	alisa := newAlisa(config)
 	if err != nil {
 		return nil, err
 	}
