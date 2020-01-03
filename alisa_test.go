@@ -50,7 +50,7 @@ func newAlisaByEnvForTesting() (*alisa, error) {
 	if err != nil {
 		return nil, err
 	}
-	b64Envs := base64.StdEncoding.EncodeToString(rawEnv)
+	b64Envs := base64.URLEncoding.EncodeToString(rawEnv)
 	return newAlisa(popURL, popID, popSecret, b64Envs, verbose)
 }
 
