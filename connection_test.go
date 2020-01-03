@@ -19,6 +19,15 @@ import (
 	"testing"
 )
 
+func TestAlisaConn_Exec(t *testing.T) {
+	a := assert.New(t)
+	db, err := sql.Open("alisa", newConfigFromEnv(t).FormatDSN())
+	a.NoError(err)
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS sqlflow_alisa_test_table(c1 STRING);`)
+	a.NoError(err)
+}
+
 func TestAlisaConn_Query(t *testing.T) {
 	a := assert.New(t)
 	db, err := sql.Open("alisa", newConfigFromEnv(t).FormatDSN())
