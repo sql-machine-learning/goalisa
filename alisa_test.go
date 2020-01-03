@@ -15,7 +15,6 @@ package goalisa
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -25,25 +24,7 @@ import (
 var errSkipTesting = fmt.Errorf("skip test")
 
 func newAlisaFromEnv(t *testing.T) *alisa {
-	if os.Getenv("POP_SECRET") == "" {
-		t.Skip()
-	}
-	popURL := os.Getenv("POP_URL")
-	popID := os.Getenv("POP_ID")
-	popSecret := os.Getenv("POP_SECRET")
-	verbose := len(os.Getenv("VERBOSE")) > 0
-	envs := map[string]string{
-		"SKYNET_ONDUTY":          os.Getenv("SKYNET_ONDUTY"),
-		"SKYNET_ACCESSID":        os.Getenv("SKYNET_ACCESSID"),
-		"SKYNET_ACCESSKEY":       os.Getenv("SKYNET_ACCESSKEY"),
-		"SKYNET_ENDPOINT":        os.Getenv("SKYNET_ENDPOINT"),
-		"SKYNET_SYSTEMID":        os.Getenv("SKYNET_SYSTEMID"),
-		"SKYNET_PACKAGEID":       os.Getenv("SKYNET_PACKAGEID"),
-		"SKYNET_SYSTEM_ENV":      os.Getenv("SKYNET_SYSTEM_ENV"),
-		"SKYNET_BIZDATE":         os.Getenv("SKYNET_BIZDATE"),
-		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
-	}
-	cfg := &Config{POPAccessID: popID, POPAccessKey: popSecret, POPURL: popURL, Verbose: verbose, Env: envs}
+	cfg := newConfigFromEnv(t)
 	return newAlisa(cfg)
 }
 
