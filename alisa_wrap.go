@@ -23,18 +23,27 @@ const (
 	readResultsBatch = 20
 )
 
-func (ali *alisa) exec(cmd string) (*alisaTaskResult, error) {
+func (ali *alisa) exec(cmd string) error {
+	_, err := ali.run(cmd, false)
+	return err
+}
+
+func (ali *alisa) query(cmd string) (*alisaTaskResult, error) {
+	return ali.run(cmd, true)
+}
+
+func (ali *alisa) run(cmd string, resultExpected bool) (*alisaTaskResult, error) {
 	taskID, status, err := ali.createTask(cmd)
 	if err != nil {
 		return nil, err
 	}
 	if ali.Verbose {
-		return ali.readResultWithLog(taskID, status)
+		return ali.trackingTaskWithLog(taskID, status, resultExpected)
 	}
-	return ali.readResultQuietly(taskID, status)
+	return ali.trackingTaskQuietly(taskID, status, resultExpected)
 }
 
-func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult, error) {
+func (ali *alisa) trackingTaskWithLog(taskID string, status int, resultExpected bool) (*alisaTaskResult, error) {
 	var err error
 	logOffset := 0
 	for !ali.completed(status) {
@@ -60,13 +69,16 @@ func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult
 			}
 		}
 		if status == alisaTaskCompleted {
-			return ali.getResults(taskID, readResultsBatch)
+			if resultExpected {
+				return ali.getResults(taskID, readResultsBatch)
+			}
+			return nil, nil
 		}
 	}
 	return nil, fmt.Errorf("invalid task status=%d", status)
 }
 
-func (ali *alisa) readResultQuietly(taskID string, status int) (*alisaTaskResult, error) {
+func (ali *alisa) trackingTaskQuietly(taskID string, status int, resultExpected bool) (*alisaTaskResult, error) {
 	var err error
 	for !ali.completed(status) {
 		time.Sleep(waitInteveral)
@@ -76,7 +88,10 @@ func (ali *alisa) readResultQuietly(taskID string, status int) (*alisaTaskResult
 	}
 
 	if status == alisaTaskCompleted {
-		return ali.getResults(taskID, readResultsBatch)
+		if resultExpected {
+			return ali.getResults(taskID, readResultsBatch)
+		}
+		return nil, nil
 	}
 	return nil, fmt.Errorf("invalid task status=%d", status)
 }

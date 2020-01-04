@@ -40,7 +40,7 @@ func (ac *alisaConn) Close() error {
 // Exec implements database/sql/driver.Execer.
 // Note: result is always nil
 func (ac *alisaConn) Exec(query string, args []driver.Value) (driver.Result, error) {
-	_, err := ac.ali.exec(query)
+	err := ac.ali.exec(query)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (ac *alisaConn) Exec(query string, args []driver.Value) (driver.Result, err
 
 // Query implements database/sql/driver.Queryer
 func (ac *alisaConn) Query(query string, args []driver.Value) (driver.Rows, error) {
-	result, err := ac.ali.exec(query)
+	result, err := ac.ali.query(query)
 	if err != nil {
 		return nil, err
 	}
