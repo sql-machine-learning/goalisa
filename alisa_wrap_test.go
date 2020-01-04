@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExecAlisaTask(t *testing.T) {
+func TestQueryAlisaTask(t *testing.T) {
 	a := assert.New(t)
 	ali := newAlisaFromEnv(t)
 	cmd := "select \"Alice\" as name, 23.8 as age, 56000 as salary;"
@@ -39,4 +39,12 @@ func TestExecAlisaTask(t *testing.T) {
 	a.Equal(res.body[0][0], "Alice")
 	a.Equal(res.body[0][1], "23.8")
 	a.Equal(res.body[0][2], "56000")
+}
+
+func TestExecAlisaTask(t *testing.T) {
+	a := assert.New(t)
+	ali := newAlisaFromEnv(t)
+	cmd := "CREATE TABLE IF NOT EXISTS sqlflow_alisa_test_table(c1 STRING);"
+	_, err := ali.exec(cmd)
+	a.NoError(err)
 }
