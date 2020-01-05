@@ -14,14 +14,18 @@
 package goalisa
 
 import (
+	"os"
 	"database/sql"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestAlisaConn_Query(t *testing.T) {
+	if os.Getenv("POP_SECRET") == "" {
+		t.Skip()
+	}
 	a := assert.New(t)
-	db, err := sql.Open("alisa", newConfigFromEnv(t).FormatDSN())
+	db, err := sql.Open("alisa", newConfigFromEnv().FormatDSN())
 	a.NoError(err)
 
 	rows, err := db.Query(`select "Alice" as name, 23.8 as age, 56000 as salary;`)

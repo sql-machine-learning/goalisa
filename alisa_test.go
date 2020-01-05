@@ -15,6 +15,7 @@ package goalisa
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -23,17 +24,16 @@ import (
 
 var errSkipTesting = fmt.Errorf("skip test")
 
-func newAlisaFromEnv(t *testing.T) *alisa {
-	cfg := newConfigFromEnv(t)
-	return newAlisa(cfg)
-}
-
 func TestCreateTask(t *testing.T) {
+	if os.Getenv("POP_SECRET") == "" {
+		t.Skip()
+	}
 	a := assert.New(t)
-	ali := newAlisaFromEnv(t)
+	ali := NewAlisaFromEnv()
 	code := "SELECT 2;"
-	taskID, _, err := ali.createTask(code)
+	taskID, _, err := ali.CreateTask(code)
 	time.Sleep(time.Second * 2) // to avoid touching the flow-control
 	a.NoError(err)
 	a.NotEmpty(taskID)
+	fmt.Println(ali.ReadLogs(taskID, 0))
 }

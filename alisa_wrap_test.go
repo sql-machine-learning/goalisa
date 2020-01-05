@@ -14,6 +14,7 @@
 package goalisa
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,10 @@ import (
 
 func TestQueryAlisaTask(t *testing.T) {
 	a := assert.New(t)
-	ali := newAlisaFromEnv(t)
+	if os.Getenv("POP_SECRET") == "" {
+		t.Skip()
+	}
+	ali := NewAlisaFromEnv()
 	cmd := "select \"Alice\" as name, 23.8 as age, 56000 as salary;"
 	res, err := ali.exec(cmd)
 	a.NoError(err)
@@ -42,8 +46,11 @@ func TestQueryAlisaTask(t *testing.T) {
 }
 
 func TestExecAlisaTask(t *testing.T) {
+	if os.Getenv("POP_SECRET") == "" {
+		t.Skip()
+	}
 	a := assert.New(t)
-	ali := newAlisaFromEnv(t)
+	ali := NewAlisaFromEnv()
 	cmd := "CREATE TABLE IF NOT EXISTS sqlflow_alisa_test_table(c1 STRING);"
 	_, err := ali.exec(cmd)
 	a.NoError(err)

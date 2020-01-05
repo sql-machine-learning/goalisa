@@ -23,8 +23,8 @@ const (
 	readResultsBatch = 20
 )
 
-func (ali *alisa) exec(cmd string) (*alisaTaskResult, error) {
-	taskID, status, err := ali.createTask(cmd)
+func (ali *Alisa) exec(cmd string) (*alisaTaskResult, error) {
+	taskID, status, err := ali.CreateTask(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -34,19 +34,19 @@ func (ali *alisa) exec(cmd string) (*alisaTaskResult, error) {
 	return ali.readResultQuietly(taskID, status)
 }
 
-func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult, error) {
+func (ali *Alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult, error) {
 	var err error
 	logOffset := 0
-	for !ali.completed(status) {
+	for !ali.Completed(status) {
 		if status == alisaTaskWaiting || status == alisaTaskAllocate {
 			fmt.Println("waiting for resources")
 		} else if status == alisaTaskRunning && logOffset >= 0 {
-			if logOffset, err = ali.readLogs(taskID, logOffset); err != nil {
+			if logOffset, err = ali.ReadLogs(taskID, logOffset); err != nil {
 				return nil, err
 			}
 		}
 		time.Sleep(waitInteveral)
-		if status, err = ali.getStatus(taskID); err != nil {
+		if status, err = ali.GetStatus(taskID); err != nil {
 			return nil, err
 		}
 	}
@@ -55,7 +55,7 @@ func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult
 		fmt.Println("waiting for resources timeout")
 	} else {
 		if logOffset >= 0 {
-			if logOffset, err = ali.readLogs(taskID, logOffset); err != nil {
+			if logOffset, err = ali.ReadLogs(taskID, logOffset); err != nil {
 				return nil, err
 			}
 		}
@@ -66,11 +66,11 @@ func (ali *alisa) readResultWithLog(taskID string, status int) (*alisaTaskResult
 	return nil, fmt.Errorf("invalid task status=%d", status)
 }
 
-func (ali *alisa) readResultQuietly(taskID string, status int) (*alisaTaskResult, error) {
+func (ali *Alisa) readResultQuietly(taskID string, status int) (*alisaTaskResult, error) {
 	var err error
-	for !ali.completed(status) {
+	for !ali.Completed(status) {
 		time.Sleep(waitInteveral)
-		if status, err = ali.getStatus(taskID); err != nil {
+		if status, err = ali.GetStatus(taskID); err != nil {
 			return nil, err
 		}
 	}

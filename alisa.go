@@ -16,6 +16,7 @@ package goalisa
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -40,18 +41,43 @@ const (
 	maxLogNum = 2000
 )
 
-type alisa struct {
+type Alisa struct {
 	*Config
 	pop *popClient
 }
 
-// newAlisa init an Alisa client
-func newAlisa(cfg *Config) *alisa {
-	return &alisa{cfg, newPOP(-1)}
+// NewAlisaFromEnv initializes Alisa client
+func NewAlisaFromEnv() *Alisa {
+	cfg := newConfigFromEnv()
+	return &Alisa{cfg, newPOP(-1)}
 }
 
-// createTask returns a task id and it's status
-func (ali *alisa) createTask(code string) (string, int, error) {
+// NewAlisa init an Alisa client
+func NewAlisa(cfg *Config) *Alisa {
+	return &Alisa{cfg, newPOP(-1)}
+}
+
+func newConfigFromEnv() *Config {
+	popURL := os.Getenv("POP_URL")
+	popID := os.Getenv("POP_ID")
+	popSecret := os.Getenv("POP_SECRET")
+	verbose := len(os.Getenv("VERBOSE")) > 0
+	envs := map[string]string{
+		"SKYNET_ONDUTY":          os.Getenv("SKYNET_ONDUTY"),
+		"SKYNET_ACCESSID":        os.Getenv("SKYNET_ACCESSID"),
+		"SKYNET_ACCESSKEY":       os.Getenv("SKYNET_ACCESSKEY"),
+		"SKYNET_ENDPOINT":        os.Getenv("SKYNET_ENDPOINT"),
+		"SKYNET_SYSTEMID":        os.Getenv("SKYNET_SYSTEMID"),
+		"SKYNET_PACKAGEID":       os.Getenv("SKYNET_PACKAGEID"),
+		"SKYNET_SYSTEM_ENV":      os.Getenv("SKYNET_SYSTEM_ENV"),
+		"SKYNET_BIZDATE":         os.Getenv("SKYNET_BIZDATE"),
+		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
+	}
+	return &Config{POPAccessID: popID, POPAccessSecret: popSecret, POPURL: popURL, Verbose: verbose, Env: envs}
+}
+
+// CreateTask returns a task id and it's status
+func (ali *Alisa) CreateTask(code string) (string, int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["ExecCode"] = code
 
@@ -74,8 +100,8 @@ func (ali *alisa) createTask(code string) (string, int, error) {
 	return val.TaskID, val.Status, nil
 }
 
-// getStatus: returns the task status of taskID
-func (ali *alisa) getStatus(taskID string) (int, error) {
+// GetStatus returns the task status of taskID
+func (ali *Alisa) GetStatus(taskID string) (int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["AlisaTaskId"] = taskID
 	res, err := ali.requetAndParseResponse("GetAlisaTask", params)
@@ -90,15 +116,15 @@ func (ali *alisa) getStatus(taskID string) (int, error) {
 	return val.Status, nil
 }
 
-// completed: check if the status is completed
-func (ali *alisa) completed(status int) bool {
+// Completed checks if the status is completed
+func (ali *Alisa) Completed(status int) bool {
 	return status == alisaTaskCompleted || status == alisaTaskError || status == alisaTaskKilled || status == alisaTaskRerun || status == alisaTaskExpired
 }
 
-// readLogs: reads task logs from `offset`
+// ReadLogs reads task logs from `offset`
 // return -1: read to the end
 // return n(>0): keep reading with the offset `n` in the next time
-func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
+func (ali *Alisa) ReadLogs(taskID string, offset int) (int, error) {
 	end := false
 	for i := 0; i < maxLogNum && !end; i++ {
 		params := baseParams(ali.POPAccessID)
@@ -129,7 +155,7 @@ func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
 	return offset, nil
 }
 
-func (ali *alisa) countResults(taskID string) (int, error) {
+func (ali *Alisa) countResults(taskID string) (int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["AlisaTaskId"] = taskID
 	res, err := ali.requetAndParseResponse("GetAlisaTaskResultCount", params)
@@ -144,7 +170,7 @@ func (ali *alisa) countResults(taskID string) (int, error) {
 }
 
 // readResults: reads the task results
-func (ali *alisa) getResults(taskID string, batch int) (*alisaTaskResult, error) {
+func (ali *Alisa) getResults(taskID string, batch int) (*alisaTaskResult, error) {
 	if batch <= 0 {
 		return nil, fmt.Errorf("batch shoud be lt 0")
 	}
@@ -169,7 +195,7 @@ func (ali *alisa) getResults(taskID string, batch int) (*alisaTaskResult, error)
 
 // stop: stops the task.
 // TODO(weiguz): need more tests
-func (ali *alisa) stop(taskID string) (bool, error) {
+func (ali *Alisa) stop(taskID string) (bool, error) {
 	params := baseParams(ali.POPAccessID)
 	params["AlisaTaskId"] = taskID
 	res, err := ali.requetAndParseResponse("StopAlisaTask", params)
@@ -183,7 +209,7 @@ func (ali *alisa) stop(taskID string) (bool, error) {
 	return ok, nil
 }
 
-func (ali *alisa) requetAndParseResponse(action string, params map[string]string) (*json.RawMessage, error) {
+func (ali *Alisa) requetAndParseResponse(action string, params map[string]string) (*json.RawMessage, error) {
 	params["Action"] = action
 	rspBuf, err := ali.pop.request(params, ali.POPURL, ali.POPAccessSecret)
 	if err != nil {
