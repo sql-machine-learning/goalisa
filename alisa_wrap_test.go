@@ -23,7 +23,7 @@ func TestQueryAlisaTask(t *testing.T) {
 	a := assert.New(t)
 	ali := newAlisaFromEnv(t)
 	cmd := "select \"Alice\" as name, 23.8 as age, 56000 as salary;"
-	res, err := ali.exec(cmd)
+	res, err := ali.query(cmd)
 	a.NoError(err)
 	// schema, header
 	a.Equal(len(res.columns), 3)
@@ -45,6 +45,6 @@ func TestExecAlisaTask(t *testing.T) {
 	a := assert.New(t)
 	ali := newAlisaFromEnv(t)
 	cmd := "CREATE TABLE IF NOT EXISTS sqlflow_alisa_test_table(c1 STRING);"
-	_, err := ali.exec(cmd)
+	err := ali.exec(cmd)
 	a.NoError(err)
 }
