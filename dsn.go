@@ -39,6 +39,8 @@ type Config struct {
 	Env map[string]string
 	// verbose denotes whether to print logs to the terminal
 	Verbose bool
+	// Project(name) of Alisa, generated from Env.
+	Project string
 }
 
 // ParseDSN deserialize the connect string
@@ -54,7 +56,7 @@ func ParseDSN(dsn string) (*Config, error) {
 		return nil, err
 	}
 
-	requiredParameter := []string{"env"}
+	requiredParameter := []string{"env", "curr_project"}
 	for _, k := range requiredParameter {
 		v := kvs.Get(k)
 		if v == "" {
@@ -67,12 +69,10 @@ func ParseDSN(dsn string) (*Config, error) {
 		return nil, err
 	}
 
-	verbose := false
-	if kvs.Get("verbose") == "true" {
-		verbose = true
-	}
+	verbose := kvs.Get("verbose") == "true"
+	project := kvs.Get("curr_project")
 
-	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose}, nil
+	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose, Project: project}, nil
 }
 
 func encodeEnv(env map[string]string) string {
@@ -107,7 +107,7 @@ func decodeEnv(b64env string) (map[string]string, error) {
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s`,
+	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s&curr_project=%s`,
 		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL,
-		encodeEnv(cfg.Env), strconv.FormatBool(cfg.Verbose))
+		encodeEnv(cfg.Env), strconv.FormatBool(cfg.Verbose), cfg.Project)
 }

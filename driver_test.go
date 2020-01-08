@@ -24,7 +24,7 @@ import (
 func TestOpen(t *testing.T) {
 	a := assert.New(t)
 	d := &Driver{}
-	conn, err := d.Open(fmt.Sprintf("pop_access_id:pop_access_key@pop_url?env=%s", base64.URLEncoding.EncodeToString([]byte(`{"value1": "param1"}`))))
+	conn, err := d.Open(fmt.Sprintf("pop_access_id:pop_access_key@pop_url?curr_project=proj&env=%s", base64.URLEncoding.EncodeToString([]byte(`{"value1": "param1"}`))))
 	a.NoError(err)
 	a.NotNil(conn)
 }

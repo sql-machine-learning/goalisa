@@ -15,9 +15,10 @@ package goalisa
 
 import (
 	"encoding/base64"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var b64EnvStr = base64.URLEncoding.EncodeToString([]byte(`{"param1":"value1"}`))
@@ -29,7 +30,7 @@ func TestEncodeEnv(t *testing.T) {
 
 func TestParseDSN(t *testing.T) {
 	a := assert.New(t)
-	dsn := `pid:pkey@example.com?env=` + b64EnvStr
+	dsn := `pid:pkey@example.com?curr_project=proj&env=` + b64EnvStr
 	cfg, err := ParseDSN(dsn)
 	a.NoError(err)
 	expected := Config{
@@ -37,7 +38,8 @@ func TestParseDSN(t *testing.T) {
 		POPAccessSecret: "pkey",
 		POPURL:          "example.com",
 		Env:             map[string]string{"param1": "value1"},
-		Verbose:         false}
+		Verbose:         false,
+		Project:         "proj"}
 	a.Equal(expected, *cfg)
 }
 
@@ -61,14 +63,15 @@ func TestConfig_FormatDSN(t *testing.T) {
 		POPAccessSecret: "pkey",
 		POPURL:          "example.com",
 		Env:             map[string]string{"param1": "value1"},
-		Verbose:         false}
-	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=false`
+		Verbose:         false,
+		Project:         "proj"}
+	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=false` + `&curr_project=proj`
 	a.Equal(expected, cfg.FormatDSN())
 }
 
 func TestRoundTrip(t *testing.T) {
 	a := assert.New(t)
-	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=true`
+	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=true&curr_project=proj`
 	cfg, err := ParseDSN(expected)
 	a.NoError(err)
 	a.Equal(expected, cfg.FormatDSN())
@@ -81,7 +84,7 @@ func newConfigFromEnv(t *testing.T) *Config {
 	popURL := os.Getenv("POP_URL")
 	popID := os.Getenv("POP_ID")
 	popSecret := os.Getenv("POP_SECRET")
-	verbose := len(os.Getenv("VERBOSE")) > 0
+	verbose := os.Getenv("VERBOSE") == "true"
 	envs := map[string]string{
 		"SKYNET_ONDUTY":          os.Getenv("SKYNET_ONDUTY"),
 		"SKYNET_ACCESSID":        os.Getenv("SKYNET_ACCESSID"),
@@ -93,5 +96,9 @@ func newConfigFromEnv(t *testing.T) *Config {
 		"SKYNET_BIZDATE":         os.Getenv("SKYNET_BIZDATE"),
 		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
 	}
-	return &Config{POPAccessID: popID, POPAccessSecret: popSecret, POPURL: popURL, Verbose: verbose, Env: envs}
+	proj := envs["SKYNET_PACKAGEID"]
+	if len(envs["SKYNET_SYSTEMID"]) > 0 {
+		proj += "_" + envs["SKYNET_SYSTEMID"]
+	}
+	return &Config{POPAccessID: popID, POPAccessSecret: popSecret, POPURL: popURL, Verbose: verbose, Env: envs, Project: proj}
 }
