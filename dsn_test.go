@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var b64EnvStr = base64.URLEncoding.EncodeToString([]byte(`{"param1":"value1"}`))
+var b64EnvStr = base64.RawURLEncoding.EncodeToString([]byte(`{"param1":"value1"}`))
 
 func TestEncodeEnv(t *testing.T) {
 	a := assert.New(t)
