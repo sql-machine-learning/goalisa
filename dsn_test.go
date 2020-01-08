@@ -30,13 +30,14 @@ func TestEncodeEnv(t *testing.T) {
 
 func TestParseDSN(t *testing.T) {
 	a := assert.New(t)
-	dsn := `pid:pkey@example.com?curr_project=proj&env=` + b64EnvStr
+	dsn := `pid:pkey@example.com?curr_project=proj&scheme=http&env=` + b64EnvStr
 	cfg, err := ParseDSN(dsn)
 	a.NoError(err)
 	expected := Config{
 		POPAccessID:     "pid",
 		POPAccessSecret: "pkey",
 		POPURL:          "example.com",
+		POPScheme:       "http",
 		Env:             map[string]string{"param1": "value1"},
 		Verbose:         false,
 		Project:         "proj"}
@@ -62,16 +63,17 @@ func TestConfig_FormatDSN(t *testing.T) {
 		POPAccessID:     "pid",
 		POPAccessSecret: "pkey",
 		POPURL:          "example.com",
+		POPScheme:       "http",
 		Env:             map[string]string{"param1": "value1"},
 		Verbose:         false,
 		Project:         "proj"}
-	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=false` + `&curr_project=proj`
+	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=false&curr_project=proj&scheme=http`
 	a.Equal(expected, cfg.FormatDSN())
 }
 
 func TestRoundTrip(t *testing.T) {
 	a := assert.New(t)
-	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=true&curr_project=proj`
+	expected := `pid:pkey@example.com?env=` + b64EnvStr + `&verbose=true&curr_project=proj&scheme=http`
 	cfg, err := ParseDSN(expected)
 	a.NoError(err)
 	a.Equal(expected, cfg.FormatDSN())
@@ -84,6 +86,7 @@ func newConfigFromEnv(t *testing.T) *Config {
 	popURL := os.Getenv("POP_URL")
 	popID := os.Getenv("POP_ID")
 	popSecret := os.Getenv("POP_SECRET")
+	popScheme := "http"
 	verbose := os.Getenv("VERBOSE") == "true"
 	envs := map[string]string{
 		"SKYNET_ONDUTY":          os.Getenv("SKYNET_ONDUTY"),
@@ -100,5 +103,5 @@ func newConfigFromEnv(t *testing.T) *Config {
 	if len(envs["SKYNET_SYSTEMID"]) > 0 {
 		proj += "_" + envs["SKYNET_SYSTEMID"]
 	}
-	return &Config{POPAccessID: popID, POPAccessSecret: popSecret, POPURL: popURL, Verbose: verbose, Env: envs, Project: proj}
+	return &Config{POPAccessID: popID, POPAccessSecret: popSecret, POPURL: popURL, POPScheme: popScheme, Verbose: verbose, Env: envs, Project: proj}
 }
