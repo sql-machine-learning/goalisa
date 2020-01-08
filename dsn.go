@@ -34,7 +34,10 @@ type Config struct {
 	// POP config
 	POPAccessID     string
 	POPAccessSecret string
-	POPURL          string
+	// POPURL does not contain a header like: http/https
+	POPURL string
+	// POPScheme: http/https
+	POPScheme string
 	// Environment variable JSON encoded in base64 format.
 	Env map[string]string
 	// verbose denotes whether to print logs to the terminal
@@ -70,9 +73,13 @@ func ParseDSN(dsn string) (*Config, error) {
 	}
 
 	verbose := kvs.Get("verbose") == "true"
+	scheme := kvs.Get("scheme")
+	if len(scheme) == 0 {
+		scheme = "http"
+	}
 	project := kvs.Get("curr_project")
 
-	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose, Project: project}, nil
+	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose, Project: project, POPScheme: scheme}, nil
 }
 
 func encodeEnv(env map[string]string) string {
@@ -107,7 +114,7 @@ func decodeEnv(b64env string) (map[string]string, error) {
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s&curr_project=%s`,
-		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL,
-		encodeEnv(cfg.Env), strconv.FormatBool(cfg.Verbose), cfg.Project)
+	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s&curr_project=%s&scheme=%s`,
+		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL, encodeEnv(cfg.Env),
+		strconv.FormatBool(cfg.Verbose), cfg.Project, cfg.POPScheme)
 }
