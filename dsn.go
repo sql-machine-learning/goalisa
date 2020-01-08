@@ -95,13 +95,13 @@ func encodeEnv(env map[string]string) string {
 		kvStrs = append(kvStrs, fmt.Sprintf(`"%s":"%s"`, k, env[k]))
 	}
 	jsonStr := `{` + strings.Join(kvStrs, `,`) + `}`
-	return base64.URLEncoding.EncodeToString([]byte(jsonStr))
+	return base64.RawURLEncoding.EncodeToString([]byte(jsonStr))
 }
 
 func decodeEnv(b64env string) (map[string]string, error) {
 	// NOTE(tony): we use url.ParseQuery to parse parameters in ParseDSN,
 	// so we use URL-compatible base64 format.
-	buf, err := base64.URLEncoding.DecodeString(b64env)
+	buf, err := base64.RawURLEncoding.DecodeString(b64env)
 	if err != nil {
 		return nil, err
 	}
