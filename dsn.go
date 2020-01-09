@@ -31,19 +31,14 @@ var (
 // Config is the deserialization of connect string, the connection string should of format:
 // pop_access_id:pop_access_secret@pop_url?env=..
 type Config struct {
-	// POP config
-	POPAccessID     string
-	POPAccessSecret string
-	// POPURL does not contain a header like: http/https
-	POPURL string
-	// POPScheme: http/https
-	POPScheme string
-	// Environment variable JSON encoded in base64 format.
-	Env map[string]string
-	// verbose denotes whether to print logs to the terminal
-	Verbose bool
-	// Project(name) of Alisa, generated from Env.
-	Project string
+	POPAccessID     string            // POP config
+	POPAccessSecret string            // POP config
+	POPURL          string            // POPURL does not contain a header like: http/https
+	POPScheme       string            // POPScheme: http/https
+	Env             map[string]string // Environment variable JSON encoded in base64 format.
+	With            map[string]string // With variable JSON encoded in base64 format.
+	Verbose         bool              // Verbose denotes whether to print logs to the terminal
+	Project         string            // Project(name) of Alisa, generated from Env.
 }
 
 // ParseDSN deserialize the connect string
@@ -59,7 +54,7 @@ func ParseDSN(dsn string) (*Config, error) {
 		return nil, err
 	}
 
-	requiredParameter := []string{"env", "curr_project"}
+	requiredParameter := []string{"env", "with", "curr_project"}
 	for _, k := range requiredParameter {
 		v := kvs.Get(k)
 		if v == "" {
@@ -67,22 +62,26 @@ func ParseDSN(dsn string) (*Config, error) {
 		}
 	}
 
-	env, err := decodeEnv(kvs.Get("env"))
+	env, err := decodeJSONB64(kvs.Get("env"))
+	if err != nil {
+		return nil, err
+	}
+	with, err := decodeJSONB64(kvs.Get("with"))
 	if err != nil {
 		return nil, err
 	}
 
-	verbose := kvs.Get("verbose") == "true"
 	scheme := kvs.Get("scheme")
 	if len(scheme) == 0 {
 		scheme = "http"
 	}
+	verbose := kvs.Get("verbose") == "true"
 	project := kvs.Get("curr_project")
 
-	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, Verbose: verbose, Project: project, POPScheme: scheme}, nil
+	return &Config{POPAccessID: pid, POPAccessSecret: ps, POPURL: purl, Env: env, With: with, Verbose: verbose, Project: project, POPScheme: scheme}, nil
 }
 
-func encodeEnv(env map[string]string) string {
+func encodeJSONB64(env map[string]string) string {
 	// We sort the env params to ensure the consistent encoding
 	keys := []string{}
 	for k := range env {
@@ -98,7 +97,7 @@ func encodeEnv(env map[string]string) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(jsonStr))
 }
 
-func decodeEnv(b64env string) (map[string]string, error) {
+func decodeJSONB64(b64env string) (map[string]string, error) {
 	// NOTE(tony): we use url.ParseQuery to parse parameters in ParseDSN,
 	// so we use URL-compatible base64 format.
 	buf, err := base64.RawURLEncoding.DecodeString(b64env)
@@ -114,7 +113,7 @@ func decodeEnv(b64env string) (map[string]string, error) {
 
 // FormatDSN serialize a config to connect string
 func (cfg *Config) FormatDSN() string {
-	return fmt.Sprintf(`%s:%s@%s?env=%s&verbose=%s&curr_project=%s&scheme=%s`,
-		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL, encodeEnv(cfg.Env),
-		strconv.FormatBool(cfg.Verbose), cfg.Project, cfg.POPScheme)
+	return fmt.Sprintf(`%s:%s@%s?env=%s&with=%s&verbose=%s&curr_project=%s&scheme=%s`,
+		cfg.POPAccessID, cfg.POPAccessSecret, cfg.POPURL, encodeJSONB64(cfg.Env),
+		encodeJSONB64(cfg.With), strconv.FormatBool(cfg.Verbose), cfg.Project, cfg.POPScheme)
 }
