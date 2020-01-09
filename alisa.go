@@ -55,14 +55,20 @@ func (ali *alisa) createTask(code string) (string, int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["ExecCode"] = code
 
-	params["SHOW_COLUMN_TYPE"] = "true" // display column type, for feature derivation.
 	params["CustomerId"] = ali.With["CustomerId"]
 	params["PluginName"] = ali.With["PluginName"]
 	params["Exec"] = ali.With["Exec"]
 	params["UniqueKey"] = fmt.Sprintf("%d", time.Now().UnixNano())
 	params["ExecTarget"] = ali.Env["ALISA_TASK_EXEC_TARGET"]
-	envBuf, _ := json.Marshal(ali.Env)
+
+	newEnv := make(map[string]string)
+	for k, v := range ali.Env {
+		newEnv[k] = v
+	}
+	newEnv["SHOW_COLUMN_TYPE"] = "true" // display column type, for feature derivation.
+	envBuf, _ := json.Marshal(newEnv)
 	params["Envs"] = string(envBuf)
+
 	res, err := ali.requetAndParseResponse("CreateAlisaTask", params)
 	if err != nil {
 		return "", -1, err
