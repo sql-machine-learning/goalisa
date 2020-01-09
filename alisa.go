@@ -60,7 +60,6 @@ func (ali *alisa) createTask(code string) (string, int, error) {
 	params["PluginName"] = ali.With["PluginName"]
 	params["Exec"] = ali.With["Exec"]
 	params["UniqueKey"] = fmt.Sprintf("%d", time.Now().UnixNano())
-	params["ProjectEnv"] = ali.Env["SKYNET_SYSTEM_ENV"]
 	params["ExecTarget"] = ali.Env["ALISA_TASK_EXEC_TARGET"]
 	envBuf, _ := json.Marshal(ali.Env)
 	params["Envs"] = string(envBuf)
@@ -186,6 +185,7 @@ func (ali *alisa) stop(taskID string) (bool, error) {
 
 func (ali *alisa) requetAndParseResponse(action string, params map[string]string) (*json.RawMessage, error) {
 	params["Action"] = action
+	params["ProjectEnv"] = ali.Env["SKYNET_SYSTEM_ENV"]
 	rspBuf, err := ali.pop.request(params, ali.POPScheme+"://"+ali.POPURL, ali.POPAccessSecret)
 	if err != nil {
 		return nil, fmt.Errorf("%s got an error: %v", action, err)
