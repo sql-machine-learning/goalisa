@@ -56,10 +56,11 @@ func (ali *alisa) createTask(code string) (string, int, error) {
 	params["ExecCode"] = code
 
 	params["SHOW_COLUMN_TYPE"] = "true" // display column type, for feature derivation.
-	params["CustomerId"] = "sqlFlow"
-	params["PluginName"] = "odps_sql"
-	params["Exec"] = "/opt/taobao/tbdpapp/dwcommonwrapper/dwcommonwrapper.sh"
+	params["CustomerId"] = ali.With["CustomerId"]
+	params["PluginName"] = ali.With["PluginName"]
+	params["Exec"] = ali.With["Exec"]
 	params["UniqueKey"] = fmt.Sprintf("%d", time.Now().UnixNano())
+	params["ProjectEnv"] = ali.Env["SKYNET_SYSTEM_ENV"]
 	params["ExecTarget"] = ali.Env["ALISA_TASK_EXEC_TARGET"]
 	envBuf, _ := json.Marshal(ali.Env)
 	params["Envs"] = string(envBuf)
