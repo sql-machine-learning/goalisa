@@ -19,6 +19,6 @@ install:
 script:
   - set -e
   - go get -u golang.org/x/lint/golint
-  - python3 -m venv venv && source venv/bin/activate && pip install pre-commit && pre-commit run -a
+  - python3 -m venv venv && source venv/bin/activate && pip install wheel pre-commit && pre-commit run -a
   - go test -v .
 
