@@ -220,10 +220,11 @@ func parseAlisaTaskResult(from *json.RawMessage, to *alisaTaskResult) error {
 		}
 		for _, h := range header {
 			nt := strings.Split(h, "::")
-			if len(nt) != 2 {
-				return fmt.Errorf("bad header of alisa task result")
+			if len(nt) == 2 {
+				to.columns = append(to.columns, alisaTaskResultColumn{name: nt[0], typ: nt[1]})
+			} else { // result of `describe/create..` doesn't have "::" separator }
+				to.columns = append(to.columns, alisaTaskResultColumn{name: h, typ: "string"})
 			}
-			to.columns = append(to.columns, alisaTaskResultColumn{name: nt[0], typ: nt[1]})
 		}
 	}
 

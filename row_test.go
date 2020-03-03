@@ -15,9 +15,10 @@ package goalisa
 
 import (
 	"database/sql/driver"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAlisaRows(t *testing.T) {

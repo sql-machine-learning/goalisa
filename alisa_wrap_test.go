@@ -47,4 +47,10 @@ func TestExecAlisaTask(t *testing.T) {
 	cmd := "CREATE TABLE IF NOT EXISTS sqlflow_alisa_test_table(c1 STRING);"
 	err := ali.exec(cmd)
 	a.NoError(err)
+
+	// then describe table
+	cmd = "DESCRIBE sqlflow_alisa_test_table;"
+	res, err := ali.query(cmd)
+	a.NoError(err)
+	a.True(len(res.body) > 0)
 }
