@@ -25,13 +25,13 @@ const (
 	readResultsBatch = 20
 )
 
-func (ali *alisa) execOut(cmd string, w io.Writer) error {
+func (ali *alisa) ExecWithWriter(cmd string, w io.Writer) error {
 	_, err := ali.run(cmd, false, w)
 	return err
 }
 
 func (ali *alisa) exec(cmd string) error {
-	return ali.execOut(cmd, os.Stdout)
+	return ali.ExecWithWriter(cmd, os.Stdout)
 }
 
 func (ali *alisa) query(cmd string) (*alisaTaskResult, error) {
