@@ -16,6 +16,7 @@ package goalisa
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -104,7 +105,7 @@ func (ali *alisa) completed(status int) bool {
 // readLogs: reads task logs from `offset`
 // return -1: read to the end
 // return n(>0): keep reading with the offset `n` in the next time
-func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
+func (ali *alisa) readLogs(taskID string, offset int, w io.Writer) (int, error) {
 	end := false
 	for i := 0; i < maxLogNum && !end; i++ {
 		params := baseParams(ali.POPAccessID)
@@ -127,7 +128,7 @@ func (ali *alisa) readLogs(taskID string, offset int) (int, error) {
 		}
 		offset += rdLen
 		end = log.End
-		fmt.Print(log.Content)
+		io.WriteString(w, log.Content)
 	}
 	if end {
 		return -1, nil

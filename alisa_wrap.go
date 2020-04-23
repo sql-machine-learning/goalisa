@@ -15,6 +15,8 @@ package goalisa
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"time"
 )
 
@@ -23,34 +25,38 @@ const (
 	readResultsBatch = 20
 )
 
-func (ali *alisa) exec(cmd string) error {
-	_, err := ali.run(cmd, false)
+func (ali *alisa) execOut(cmd string, w io.Writer) error {
+	_, err := ali.run(cmd, false, w)
 	return err
 }
 
-func (ali *alisa) query(cmd string) (*alisaTaskResult, error) {
-	return ali.run(cmd, true)
+func (ali *alisa) exec(cmd string) error {
+	return ali.execOut(cmd, os.Stdout)
 }
 
-func (ali *alisa) run(cmd string, resultExpected bool) (*alisaTaskResult, error) {
+func (ali *alisa) query(cmd string) (*alisaTaskResult, error) {
+	return ali.run(cmd, true, os.Stdout)
+}
+
+func (ali *alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
 	taskID, status, err := ali.createTask(cmd)
 	if err != nil {
 		return nil, err
 	}
 	if ali.Verbose {
-		return ali.trackingTaskWithLog(taskID, status, resultExpected)
+		return ali.trackingTaskWithLog(taskID, status, resultExpected, w)
 	}
 	return ali.trackingTaskQuietly(taskID, status, resultExpected)
 }
 
-func (ali *alisa) trackingTaskWithLog(taskID string, status int, resultExpected bool) (*alisaTaskResult, error) {
+func (ali *alisa) trackingTaskWithLog(taskID string, status int, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
 	var err error
 	logOffset := 0
 	for !ali.completed(status) {
 		if status == alisaTaskWaiting || status == alisaTaskAllocate {
-			fmt.Println("waiting for resources")
+			io.WriteString(w, "waiting for resources")
 		} else if status == alisaTaskRunning && logOffset >= 0 {
-			if logOffset, err = ali.readLogs(taskID, logOffset); err != nil {
+			if logOffset, err = ali.readLogs(taskID, logOffset, w); err != nil {
 				return nil, err
 			}
 		}
@@ -61,10 +67,10 @@ func (ali *alisa) trackingTaskWithLog(taskID string, status int, resultExpected 
 	}
 
 	if status == alisaTaskExpired {
-		fmt.Println("waiting for resources timeout")
+		io.WriteString(w, "waiting for resources timeout")
 	} else {
 		if logOffset >= 0 {
-			if logOffset, err = ali.readLogs(taskID, logOffset); err != nil {
+			if logOffset, err = ali.readLogs(taskID, logOffset, w); err != nil {
 				return nil, err
 			}
 		}
