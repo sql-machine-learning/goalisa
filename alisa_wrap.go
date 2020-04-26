@@ -25,20 +25,20 @@ const (
 	readResultsBatch = 20
 )
 
-func (ali *alisa) ExecWithWriter(cmd string, w io.Writer) error {
+func (ali *Alisa) ExecWithWriter(cmd string, w io.Writer) error {
 	_, err := ali.run(cmd, false, w)
 	return err
 }
 
-func (ali *alisa) exec(cmd string) error {
+func (ali *Alisa) exec(cmd string) error {
 	return ali.ExecWithWriter(cmd, os.Stdout)
 }
 
-func (ali *alisa) query(cmd string) (*alisaTaskResult, error) {
+func (ali *Alisa) query(cmd string) (*alisaTaskResult, error) {
 	return ali.run(cmd, true, os.Stdout)
 }
 
-func (ali *alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
+func (ali *Alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
 	taskID, status, err := ali.createTask(cmd)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (ali *alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskR
 	return ali.trackingTaskQuietly(taskID, status, resultExpected)
 }
 
-func (ali *alisa) trackingTaskWithLog(taskID string, status int, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
+func (ali *Alisa) trackingTaskWithLog(taskID string, status int, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
 	var err error
 	logOffset := 0
 	for !ali.completed(status) {
@@ -84,7 +84,7 @@ func (ali *alisa) trackingTaskWithLog(taskID string, status int, resultExpected 
 	return nil, fmt.Errorf("invalid task status=%d", status)
 }
 
-func (ali *alisa) trackingTaskQuietly(taskID string, status int, resultExpected bool) (*alisaTaskResult, error) {
+func (ali *Alisa) trackingTaskQuietly(taskID string, status int, resultExpected bool) (*alisaTaskResult, error) {
 	var err error
 	for !ali.completed(status) {
 		time.Sleep(waitInteveral)
