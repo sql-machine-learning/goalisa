@@ -18,7 +18,7 @@ import (
 )
 
 type alisaConn struct {
-	ali *alisa
+	ali *Alisa
 }
 
 // Begin, unimplemented

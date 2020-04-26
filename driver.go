@@ -33,7 +33,7 @@ func (dr Driver) Open(dsn string) (driver.Conn, error) {
 		return nil, err
 	}
 
-	alisa := newAlisa(config)
+	alisa := New(config)
 	if err != nil {
 		return nil, err
 	}

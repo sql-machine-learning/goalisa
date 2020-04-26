@@ -23,9 +23,9 @@ import (
 
 var errSkipTesting = fmt.Errorf("skip test")
 
-func newAlisaFromEnv(t *testing.T) *alisa {
+func newAlisaFromEnv(t *testing.T) *Alisa {
 	cfg := newConfigFromEnv(t)
-	return newAlisa(cfg)
+	return New(cfg)
 }
 
 func TestCreateTask(t *testing.T) {
