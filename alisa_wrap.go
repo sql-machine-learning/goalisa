@@ -25,6 +25,7 @@ const (
 	readResultsBatch = 20
 )
 
+// ExecWithWriter executes cmd and write logs into w
 func (ali *Alisa) ExecWithWriter(cmd string, w io.Writer) error {
 	_, err := ali.run(cmd, false, w)
 	return err
