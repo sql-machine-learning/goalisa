@@ -54,3 +54,18 @@ func TestExecAlisaTask(t *testing.T) {
 	a.NoError(err)
 	a.True(len(res.body) > 0)
 }
+
+func TestExecAlisaTaskHints(t *testing.T) {
+	a := assert.New(t)
+	ali := newAlisaFromEnv(t)
+	hint := `set odps.sql.select.output.format="HumanReadable";`
+	qry := `SELECT 1;`
+
+	goodCmd := hint + "\n" + qry
+	_, err := ali.query(goodCmd)
+	a.NoError(err)
+
+	badCmd := hint + qry
+	_, err = ali.query(badCmd)
+	a.Error(err)
+}
