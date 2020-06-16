@@ -53,13 +53,19 @@ func New(cfg *Config) *Alisa {
 }
 
 // createTask returns a task id and it's status
-func (ali *Alisa) createTask(code string) (string, int, error) {
+func (ali *Alisa) createTask(taskType int, code string) (string, int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["ExecCode"] = code
 
+	if taskType == pyodps {
+		params["PluginName"] = ali.With["PluginName4PyODPS"]
+		params["Exec"] = ali.With["Exec4PyODPS"]
+	} else {
+		// odpsSQL
+		params["PluginName"] = ali.With["PluginName"]
+		params["Exec"] = ali.With["Exec"]
+	}
 	params["CustomerId"] = ali.With["CustomerId"]
-	params["PluginName"] = ali.With["PluginName"]
-	params["Exec"] = ali.With["Exec"]
 	params["UniqueKey"] = fmt.Sprintf("%d", time.Now().UnixNano())
 	params["ExecTarget"] = ali.Env["ALISA_TASK_EXEC_TARGET"]
 

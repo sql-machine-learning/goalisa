@@ -25,9 +25,20 @@ const (
 	readResultsBatch = 20
 )
 
+const (
+	odpsSQL = iota
+	pyodps
+)
+
 // ExecWithWriter executes cmd and write logs into w
 func (ali *Alisa) ExecWithWriter(cmd string, w io.Writer) error {
-	_, err := ali.run(cmd, false, w)
+	_, err := ali.run(odpsSQL, cmd, false, w)
+	return err
+}
+
+// ExecPyODPSWithWriter executes cmd(pyodps code) and write logs into w
+func (ali *Alisa) ExecPyODPSWithWriter(cmd string, w io.Writer) error {
+	_, err := ali.run(pyodps, cmd, false, w)
 	return err
 }
 
@@ -36,11 +47,11 @@ func (ali *Alisa) exec(cmd string) error {
 }
 
 func (ali *Alisa) query(cmd string) (*alisaTaskResult, error) {
-	return ali.run(cmd, true, os.Stdout)
+	return ali.run(odpsSQL, cmd, true, os.Stdout)
 }
 
-func (ali *Alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
-	taskID, status, err := ali.createTask(cmd)
+func (ali *Alisa) run(taskType int, cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
+	taskID, status, err := ali.createTask(taskType, cmd)
 	if err != nil {
 		return nil, err
 	}

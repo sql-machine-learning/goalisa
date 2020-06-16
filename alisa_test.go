@@ -32,7 +32,7 @@ func TestCreateTask(t *testing.T) {
 	a := assert.New(t)
 	ali := newAlisaFromEnv(t)
 	code := "SELECT 2;"
-	taskID, _, err := ali.createTask(code)
+	taskID, _, err := ali.createTask(odpsSQL, code)
 	time.Sleep(time.Second * 2) // to avoid touching the flow-control
 	a.NoError(err)
 	a.NotEmpty(taskID)
