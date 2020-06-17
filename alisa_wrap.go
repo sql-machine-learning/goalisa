@@ -25,20 +25,20 @@ const (
 	readResultsBatch = 20
 )
 
-const (
-	odpsSQL = iota
-	pyodps
-)
-
 // ExecWithWriter executes cmd and write logs into w
 func (ali *Alisa) ExecWithWriter(cmd string, w io.Writer) error {
-	_, err := ali.run(odpsSQL, cmd, false, w)
+	_, err := ali.run(cmd, false, w)
 	return err
 }
 
 // ExecPyODPSWithWriter executes cmd(pyodps code) and write logs into w
-func (ali *Alisa) ExecPyODPSWithWriter(cmd string, w io.Writer) error {
-	_, err := ali.run(pyodps, cmd, false, w)
+func (ali *Alisa) ExecPyODPSWithWriter(cmd, args string, w io.Writer) error {
+	taskID, status, err := ali.createPyODPSTask(cmd, args)
+
+	if err != nil {
+		return err
+	}
+	_, err = ali.trackingTask(taskID, status, false, w)
 	return err
 }
 
@@ -47,14 +47,19 @@ func (ali *Alisa) exec(cmd string) error {
 }
 
 func (ali *Alisa) query(cmd string) (*alisaTaskResult, error) {
-	return ali.run(odpsSQL, cmd, true, os.Stdout)
+	return ali.run(cmd, true, os.Stdout)
 }
 
-func (ali *Alisa) run(taskType int, cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
-	taskID, status, err := ali.createTask(taskType, cmd)
+func (ali *Alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
+	taskID, status, err := ali.createSQLTask(cmd)
+
 	if err != nil {
 		return nil, err
 	}
+	return ali.trackingTask(taskID, status, resultExpected, w)
+}
+
+func (ali *Alisa) trackingTask(taskID string, status int, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
 	if ali.Verbose {
 		return ali.trackingTaskWithLog(taskID, status, resultExpected, w)
 	}
