@@ -115,9 +115,11 @@ func newConfigFromEnv(t *testing.T) *Config {
 		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
 	}
 	with := map[string]string{
-		"CustomerId": os.Getenv("CustomerId"),
-		"PluginName": os.Getenv("PluginName"),
-		"Exec":       os.Getenv("Exec"),
+		"CustomerId":        os.Getenv("CustomerId"),
+		"PluginName":        os.Getenv("PluginName"),
+		"Exec":              os.Getenv("Exec"),
+		"PluginName4PyODPS": os.Getenv("PluginName4PyODPS"),
+		"Exec4PyODPS":       os.Getenv("Exec4PyODPS"),
 	}
 	proj := envs["SKYNET_PACKAGEID"]
 	if len(envs["SKYNET_SYSTEMID"]) > 0 {
