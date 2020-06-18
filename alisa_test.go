@@ -28,11 +28,33 @@ func newAlisaFromEnv(t *testing.T) *Alisa {
 	return New(cfg)
 }
 
-func TestCreateTask(t *testing.T) {
+func TestCreateSQLTask(t *testing.T) {
 	a := assert.New(t)
 	ali := newAlisaFromEnv(t)
 	code := "SELECT 2;"
-	taskID, _, err := ali.createTask(code)
+	taskID, _, err := ali.createSQLTask(code)
+	time.Sleep(time.Second * 2) // to avoid touching the flow-control
+	a.NoError(err)
+	a.NotEmpty(taskID)
+}
+
+func TestCreatePyODPSTask(t *testing.T) {
+	a := assert.New(t)
+	ali := newAlisaFromEnv(t)
+	code := `import argparse
+
+if __name__ == "__main__":
+    input_table_name = args['input_table']
+    output_table_name = args['output_table']
+    print(input_table_name)
+    print(output_table_name)
+
+    input_table = o.get_table(input_table_name)
+    print(input_table.schema)
+    output_table = o.create_table(output_table_name, input_table.schema)
+	`
+	args := "input_table=table_1 output_table=table_2"
+	taskID, _, err := ali.createPyODPSTask(code, args)
 	time.Sleep(time.Second * 2) // to avoid touching the flow-control
 	a.NoError(err)
 	a.NotEmpty(taskID)

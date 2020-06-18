@@ -31,6 +31,17 @@ func (ali *Alisa) ExecWithWriter(cmd string, w io.Writer) error {
 	return err
 }
 
+// ExecPyODPSWithWriter executes cmd(pyodps code) and write logs into w
+func (ali *Alisa) ExecPyODPSWithWriter(cmd, args string, w io.Writer) error {
+	taskID, status, err := ali.createPyODPSTask(cmd, args)
+
+	if err != nil {
+		return err
+	}
+	_, err = ali.trackingTask(taskID, status, false, w)
+	return err
+}
+
 func (ali *Alisa) exec(cmd string) error {
 	return ali.ExecWithWriter(cmd, os.Stdout)
 }
@@ -40,10 +51,15 @@ func (ali *Alisa) query(cmd string) (*alisaTaskResult, error) {
 }
 
 func (ali *Alisa) run(cmd string, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
-	taskID, status, err := ali.createTask(cmd)
+	taskID, status, err := ali.createSQLTask(cmd)
+
 	if err != nil {
 		return nil, err
 	}
+	return ali.trackingTask(taskID, status, resultExpected, w)
+}
+
+func (ali *Alisa) trackingTask(taskID string, status int, resultExpected bool, w io.Writer) (*alisaTaskResult, error) {
 	if ali.Verbose {
 		return ali.trackingTaskWithLog(taskID, status, resultExpected, w)
 	}

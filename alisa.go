@@ -52,14 +52,32 @@ func New(cfg *Config) *Alisa {
 	return &Alisa{cfg, newPOP(-1)}
 }
 
-// createTask returns a task id and it's status
-func (ali *Alisa) createTask(code string) (string, int, error) {
+func (ali *Alisa) createSQLTask(code string) (string, int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["ExecCode"] = code
 
-	params["CustomerId"] = ali.With["CustomerId"]
 	params["PluginName"] = ali.With["PluginName"]
 	params["Exec"] = ali.With["Exec"]
+
+	return ali.createTask(params)
+}
+
+func (ali *Alisa) createPyODPSTask(code, args string) (string, int, error) {
+	params := baseParams(ali.POPAccessID)
+	params["ExecCode"] = code
+
+	params["PluginName"] = ali.With["PluginName4PyODPS"]
+	params["Exec"] = ali.With["Exec4PyODPS"]
+	if len(args) > 0 {
+		params["Args"] = args
+	}
+
+	return ali.createTask(params)
+}
+
+// createTask returns a task id and it's status
+func (ali *Alisa) createTask(params map[string]string) (string, int, error) {
+	params["CustomerId"] = ali.With["CustomerId"]
 	params["UniqueKey"] = fmt.Sprintf("%d", time.Now().UnixNano())
 	params["ExecTarget"] = ali.Env["ALISA_TASK_EXEC_TARGET"]
 
@@ -70,7 +88,6 @@ func (ali *Alisa) createTask(code string) (string, int, error) {
 	newEnv["SHOW_COLUMN_TYPE"] = "true" // display column type, for feature derivation.
 	envBuf, _ := json.Marshal(newEnv)
 	params["Envs"] = string(envBuf)
-
 	res, err := ali.requetAndParseResponse("CreateAlisaTask", params)
 	if err != nil {
 		return "", -1, err
