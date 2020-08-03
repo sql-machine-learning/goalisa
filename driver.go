@@ -34,9 +34,5 @@ func (dr Driver) Open(dsn string) (driver.Conn, error) {
 	}
 
 	alisa := New(config)
-	if err != nil {
-		return nil, err
-	}
-
 	return &alisaConn{alisa}, nil
 }
