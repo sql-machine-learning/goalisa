@@ -112,6 +112,7 @@ func newConfigFromEnv(t *testing.T) *Config {
 		"SKYNET_PACKAGEID":       os.Getenv("SKYNET_PACKAGEID"),
 		"SKYNET_SYSTEM_ENV":      os.Getenv("SKYNET_SYSTEM_ENV"),
 		"SKYNET_BIZDATE":         os.Getenv("SKYNET_BIZDATE"),
+		"SKYNET_TENANT_ID":       os.Getenv("SKYNET_TENANT_ID"),
 		"ALISA_TASK_EXEC_TARGET": os.Getenv("ALISA_TASK_EXEC_TARGET"),
 	}
 	with := map[string]string{
