@@ -88,7 +88,7 @@ func (ali *Alisa) createTask(params map[string]string) (string, int, error) {
 	newEnv["SHOW_COLUMN_TYPE"] = "true" // display column type, for feature derivation.
 	envBuf, _ := json.Marshal(newEnv)
 	params["Envs"] = string(envBuf)
-	res, err := ali.requetAndParseResponse("CreateAlisaTask", params)
+	res, err := ali.requestAndParseResponse("CreateAlisaTask", params)
 	if err != nil {
 		return "", -1, err
 	}
@@ -103,7 +103,7 @@ func (ali *Alisa) createTask(params map[string]string) (string, int, error) {
 func (ali *Alisa) getStatus(taskID string) (int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["AlisaTaskId"] = taskID
-	res, err := ali.requetAndParseResponse("GetAlisaTask", params)
+	res, err := ali.requestAndParseResponse("GetAlisaTask", params)
 	if err != nil {
 		return -1, err
 	}
@@ -129,7 +129,7 @@ func (ali *Alisa) readLogs(taskID string, offset int, w io.Writer) (int, error) 
 		params := baseParams(ali.POPAccessID)
 		params["AlisaTaskId"] = taskID
 		params["Offset"] = fmt.Sprintf("%d", offset)
-		res, err := ali.requetAndParseResponse("GetAlisaTaskLog", params)
+		res, err := ali.requestAndParseResponse("GetAlisaTaskLog", params)
 		if err != nil {
 			return offset, err
 		}
@@ -157,7 +157,7 @@ func (ali *Alisa) readLogs(taskID string, offset int, w io.Writer) (int, error) 
 func (ali *Alisa) countResults(taskID string) (int, error) {
 	params := baseParams(ali.POPAccessID)
 	params["AlisaTaskId"] = taskID
-	res, err := ali.requetAndParseResponse("GetAlisaTaskResultCount", params)
+	res, err := ali.requestAndParseResponse("GetAlisaTaskResultCount", params)
 	if err != nil {
 		return 0, err
 	}
@@ -183,7 +183,7 @@ func (ali *Alisa) getResults(taskID string, batch int) (*alisaTaskResult, error)
 		params["AlisaTaskId"] = taskID
 		params["Start"] = fmt.Sprintf("%d", i)
 		params["Limit"] = fmt.Sprintf("%d", batch)
-		res, err := ali.requetAndParseResponse("GetAlisaTaskResult", params)
+		res, err := ali.requestAndParseResponse("GetAlisaTaskResult", params)
 		if err != nil {
 			return nil, err
 		}
@@ -197,7 +197,7 @@ func (ali *Alisa) getResults(taskID string, batch int) (*alisaTaskResult, error)
 func (ali *Alisa) stop(taskID string) (bool, error) {
 	params := baseParams(ali.POPAccessID)
 	params["AlisaTaskId"] = taskID
-	res, err := ali.requetAndParseResponse("StopAlisaTask", params)
+	res, err := ali.requestAndParseResponse("StopAlisaTask", params)
 	if err != nil {
 		return false, err
 	}
@@ -208,7 +208,7 @@ func (ali *Alisa) stop(taskID string) (bool, error) {
 	return ok, nil
 }
 
-func (ali *Alisa) requetAndParseResponse(action string, params map[string]string) (*json.RawMessage, error) {
+func (ali *Alisa) requestAndParseResponse(action string, params map[string]string) (*json.RawMessage, error) {
 	params["Action"] = action
 	params["ProjectEnv"] = ali.Env["SKYNET_SYSTEM_ENV"]
 	rspBuf, err := ali.pop.request(params, ali.POPScheme+"://"+ali.POPURL, ali.POPAccessSecret)

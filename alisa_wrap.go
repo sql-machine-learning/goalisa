@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	waitInteveral    = time.Duration(2) * time.Second
+	waitInterval     = time.Duration(2) * time.Second
 	readResultsBatch = 20
 )
 
@@ -77,7 +77,7 @@ func (ali *Alisa) trackingTaskWithLog(taskID string, status int, resultExpected 
 				return nil, err
 			}
 		}
-		time.Sleep(waitInteveral)
+		time.Sleep(waitInterval)
 		if status, err = ali.getStatus(taskID); err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func (ali *Alisa) trackingTaskWithLog(taskID string, status int, resultExpected 
 func (ali *Alisa) trackingTaskQuietly(taskID string, status int, resultExpected bool) (*alisaTaskResult, error) {
 	var err error
 	for !ali.completed(status) {
-		time.Sleep(waitInteveral)
+		time.Sleep(waitInterval)
 		if status, err = ali.getStatus(taskID); err != nil {
 			return nil, err
 		}
