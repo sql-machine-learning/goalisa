@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	waitInterval     = time.Duration(2) * time.Second
+	waitInterval     = time.Duration(7) * time.Second
 	readResultsBatch = 20
 )
 
@@ -70,21 +70,21 @@ func (ali *Alisa) trackingTaskWithLog(taskID string, status int, resultExpected 
 	var err error
 	logOffset := 0
 	for !ali.completed(status) {
+		time.Sleep(waitInterval)
 		if status == alisaTaskWaiting || status == alisaTaskAllocate {
-			io.WriteString(w, "waiting for resources")
+			io.WriteString(w, "waiting for resources\n")
 		} else if status == alisaTaskRunning && logOffset >= 0 {
 			if logOffset, err = ali.readLogs(taskID, logOffset, w); err != nil {
 				return nil, err
 			}
 		}
-		time.Sleep(waitInterval)
 		if status, err = ali.getStatus(taskID); err != nil {
 			return nil, err
 		}
 	}
 
 	if status == alisaTaskExpired {
-		io.WriteString(w, "waiting for resources timeout")
+		io.WriteString(w, "waiting for resources timeout\n")
 	} else {
 		if logOffset >= 0 {
 			if logOffset, err = ali.readLogs(taskID, logOffset, w); err != nil {
